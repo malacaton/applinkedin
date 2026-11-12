@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Ali.Cli/Ali.Cli.csproj" />
+    <Project Path="src/Ali.Core/Ali.Core.csproj" />
+    <Project Path="src/Ali.Mcp/Ali.Mcp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Ali.Core.Tests/Ali.Core.Tests.csproj" />
+  </Folder>
+</Solution>

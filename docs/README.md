@@ -4,6 +4,8 @@
 | --- | --- |
 | [decisiones/](decisiones/) | Registro de decisiones de arquitectura (ADR): qué se decidió, por qué y qué se descartó |
 | [historias/](historias/) | Historias de usuario (HU) de la v1, punto de partida de cada ciclo SDD |
+| [especificaciones/](especificaciones/) | Especificación de cada historia (`HU-NN.md`): comportamiento, contrato y criterios refinados |
+| [planes/](planes/) | Plan técnico y tareas de cada historia (`HU-NN.md`) |
 | [bitacora.md](bitacora.md) | Problemas encontrados durante el desarrollo y cómo se resolvieron |
 
 ## Proceso de trabajo (SDD)
