@@ -2,7 +2,7 @@
 
 Planificador local de contenido para LinkedIn: centraliza tus artículos y publicaciones en Markdown, aplica la cadencia que tú definas por serie y te dice qué huecos tienes libres en el calendario. Se usa desde un asistente de IA (Claude u otro cliente compatible con MCP) o desde la línea de comandos.
 
-> **Estado: en diseño.** Este repositorio contiene de momento el estudio de viabilidad y las decisiones de alcance. El código de la v1 todavía no existe. Ver [docs/estudio-viabilidad.md](docs/estudio-viabilidad.md).
+> **Estado: en diseño.** El código de la v1 todavía no existe; este README recoge el alcance y la arquitectura decididos.
 
 ## Qué hace (y qué no)
 
@@ -52,7 +52,7 @@ flowchart LR
 
 ## Instalación
 
-> Pendiente de la v1. Los requisitos concretos dependen del stack, que aún no está decidido (.NET o TypeScript).
+> Pendiente de la v1. Stack: .NET 10 para núcleo, CLI y servidor MCP; Angular 22 para la interfaz de la v2 ([ADR-0001](docs/decisiones/0001-stack-tecnologico.md)).
 
 El flujo previsto será:
 
@@ -81,8 +81,11 @@ applinkedin/
 ├── README.md
 ├── LICENSE                     Apache License 2.0
 ├── NOTICE
+├── CLAUDE.md                   Instrucciones para asistentes de IA
 └── docs/
-    └── estudio-viabilidad.md   Análisis previo y decisiones de alcance
+    ├── decisiones/             Registro de decisiones (ADR)
+    ├── historias/              Historias de usuario de la v1
+    └── bitacora.md             Problemas encontrados y cómo se resolvieron
 ```
 
 ## Aviso
