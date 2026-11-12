@@ -1,0 +1,23 @@
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# Configuración local y secretos (tokens, rutas personales)
+.env
+.env.*
+*.local.json
+config.local.*
+
+# Salidas de compilación (se ajustará al stack de la v1)
+bin/
+obj/
+dist/
+build/
+node_modules/
+
+# Documentación y notas privadas (no se publican)
+private/
