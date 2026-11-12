@@ -5,7 +5,7 @@ Orden recomendado de desarrollo. Cada historia es la entrada de un ciclo SDD (ve
 | HU | Título | Depende de | Estado |
 | --- | --- | --- | --- |
 | [HU-00](HU-00-esqueleto-solucion.md) | Esqueleto de la solución | — | Hecha |
-| [HU-01](HU-01-catalogo.md) | Leer el catálogo de piezas | HU-00 | Pendiente |
+| [HU-01](HU-01-catalogo.md) | Leer el catálogo de piezas | HU-00 | En curso |
 | [HU-02](HU-02-series-y-cadencias.md) | Definir series y cadencias | HU-00 | Pendiente |
 | [HU-03](HU-03-listar-piezas.md) | Listar piezas con filtros | HU-01, HU-02 | Pendiente |
 | [HU-04](HU-04-cambiar-estado.md) | Cambiar el estado de una pieza | HU-01 | Pendiente |
