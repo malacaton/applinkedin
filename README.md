@@ -2,7 +2,7 @@
 
 Planificador local de contenido para LinkedIn: centraliza tus artículos y publicaciones en Markdown, aplica la cadencia que tú definas por serie y te dice qué huecos tienes libres en el calendario. Se usa desde un asistente de IA (Claude u otro cliente compatible con MCP) o desde la línea de comandos.
 
-> **Estado: en diseño.** El código de la v1 todavía no existe; este README recoge el alcance y la arquitectura decididos.
+> **Estado: en desarrollo.** La v1 se está construyendo historia a historia; este README recoge el alcance y la arquitectura decididos.
 
 ## Qué hace (y qué no)
 
@@ -82,10 +82,30 @@ applinkedin/
 ├── LICENSE                     Apache License 2.0
 ├── NOTICE
 ├── CLAUDE.md                   Instrucciones para asistentes de IA
+├── global.json                 SDK de .NET 10 y ejecutor de pruebas
+├── back/
+│   ├── Ali.slnx                Solución .NET
+│   ├── src/
+│   │   ├── Ali.Core/           Núcleo: catálogo, cadencias, huecos
+│   │   ├── Ali.Cli/            Línea de comandos
+│   │   └── Ali.Mcp/            Servidor MCP (stdio)
+│   └── tests/
+│       └── Ali.Core.Tests/     Pruebas del núcleo (xUnit v3)
 └── docs/
     ├── decisiones/             Registro de decisiones (ADR)
     ├── historias/              Historias de usuario de la v1
+    ├── especificaciones/       Especificación de cada historia
+    ├── planes/                 Plan técnico y tareas de cada historia
     └── bitacora.md             Problemas encontrados y cómo se resolvieron
+```
+
+## Compilar y probar
+
+Requiere el SDK de .NET 10. Desde la raíz del repositorio:
+
+```bash
+dotnet build back
+dotnet test back
 ```
 
 ## Aviso
