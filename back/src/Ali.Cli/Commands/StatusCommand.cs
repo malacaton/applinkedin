@@ -1,0 +1,152 @@
+using System.CommandLine;
+using System.Globalization;
+using Ali.Core.Content;
+
+namespace Ali.Cli.Commands;
+
+/// <summary>
+/// 'ali estado': changes the status, dates and URL of one piece.
+/// </summary>
+internal static class StatusCommand
+{
+    private const string DateFormat = "yyyy-MM-dd";
+    private const string TodayWord = "hoy";
+    private const string Missing = "—";
+
+    public static Command Create(CliContext context)
+    {
+        var piece = new Argument<string>("fichero")
+        {
+            Description = "Pieza, con la ruta que muestra 'ali listar' (con o sin .md).",
+        };
+        var content = new Option<string?>("--contenido", "-c")
+        {
+            Description = $"Carpeta de contenido. Por defecto, {CliContext.ContentFolderVariable} o la carpeta actual.",
+            HelpName = "carpeta",
+        };
+        var status = new Option<string?>("--estado", "-e")
+        {
+            Description = $"Nuevo estado ({string.Join(", ", PieceStatusNames.All)}).",
+            HelpName = "estado",
+        };
+        var planned = new Option<string?>("--fecha-prevista")
+        {
+            Description = "Fecha prevista (AAAA-MM-DD u hoy).",
+            HelpName = "fecha",
+        };
+        var published = new Option<string?>("--fecha-publicada")
+        {
+            Description = "Fecha de publicación (AAAA-MM-DD u hoy).",
+            HelpName = "fecha",
+        };
+        var url = new Option<string?>("--url")
+        {
+            Description = "URL http o https de la pieza publicada.",
+            HelpName = "url",
+        };
+
+        var command = new Command("estado", "Cambia el estado, las fechas o la URL de una pieza, tocando solo su bloque YAML.")
+        {
+            piece, content, status, planned, published, url,
+        };
+
+        command.SetAction(result => Execute(
+            context,
+            result.GetValue(piece) ?? string.Empty,
+            result.GetValue(content),
+            result.GetValue(status),
+            result.GetValue(planned),
+            result.GetValue(published),
+            result.GetValue(url)));
+
+        return command;
+    }
+
+    private static int Execute(
+        CliContext context,
+        string piecePath,
+        string? contentOption,
+        string? statusValue,
+        string? plannedValue,
+        string? publishedValue,
+        string? urlValue)
+    {
+        PieceStatus? status = null;
+        if (statusValue is not null)
+        {
+            if (!PieceStatusNames.TryParse(statusValue, out var parsed))
+            {
+                return context.Fail(
+                    $"Estado '{statusValue}' no válido. Valores admitidos: {string.Join(", ", PieceStatusNames.All)}.");
+            }
+
+            status = parsed;
+        }
+
+        if (!TryParseDate(context, plannedValue, out var plannedDate))
+        {
+            return context.Fail($"Fecha '{plannedValue}' no válida en --fecha-prevista. Formato esperado: AAAA-MM-DD u hoy.");
+        }
+
+        if (!TryParseDate(context, publishedValue, out var publishedDate))
+        {
+            return context.Fail($"Fecha '{publishedValue}' no válida en --fecha-publicada. Formato esperado: AAAA-MM-DD u hoy.");
+        }
+
+        var changes = new PieceChanges
+        {
+            Status = status,
+            PlannedDate = plannedDate,
+            PublishedDate = publishedDate,
+            Url = urlValue?.Trim(),
+        };
+
+        PieceUpdateResult result;
+        try
+        {
+            result = new PieceUpdater().Update(context.ResolveContentFolder(contentOption), piecePath, changes);
+        }
+        catch (Exception ex) when (ex is PieceUpdateException or DirectoryNotFoundException)
+        {
+            return context.Fail(ex.Message);
+        }
+
+        if (!result.HasChanges)
+        {
+            context.Output.WriteLine($"Sin cambios en {result.Path}.");
+            return CliContext.Success;
+        }
+
+        context.Output.WriteLine($"Actualizado {result.Path}:");
+        foreach (var change in result.Changes)
+        {
+            context.Output.WriteLine($"  {change.Field}: {change.OldValue ?? Missing} → {change.NewValue}");
+        }
+
+        return CliContext.Success;
+    }
+
+    private static bool TryParseDate(CliContext context, string? value, out DateOnly? date)
+    {
+        date = null;
+        if (value is null)
+        {
+            return true;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Equals(TodayWord, StringComparison.OrdinalIgnoreCase))
+        {
+            date = context.Today();
+            return true;
+        }
+
+        if (DateOnly.TryParseExact(trimmed, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+        {
+            date = parsed;
+            return true;
+        }
+
+        return false;
+    }
+}
