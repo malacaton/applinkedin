@@ -135,6 +135,14 @@ ali huecos casos-reales -n 5 --desde hoy
 
 Una fecha está ocupada si la serie ya tiene ese día una pieza `listo`, `programado` o `publicado`. La columna `COINCIDE CON` muestra, solo como información, las piezas de otras series del mismo día. Las series se leen de `series.yaml` en la carpeta de contenido, o del fichero indicado con `--series` o `ALI_SERIES`. Con `--json` la salida es JSON.
 
+`ali validar` revisa el calendario y señala choques, huecos sin cubrir, piezas fuera de cadencia, dependencias rotas, mal ordenadas o desfasadas, piezas bloqueadas y series desconocidas:
+
+```bash
+ali validar --desde hoy --hasta 2026-12-31 -s casos-reales
+```
+
+Por defecto revisa desde hoy hasta 28 días después. Los problemas de dependencias y de series se buscan en todo el catálogo. El comando termina con código 0 aunque encuentre problemas.
+
 ## Aviso
 
 Proyecto personal e independiente. No está afiliado, patrocinado ni respaldado por LinkedIn Corporation. LinkedIn es una marca registrada de LinkedIn Corporation.

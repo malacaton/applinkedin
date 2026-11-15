@@ -29,14 +29,16 @@ public static class SlotFinder
     public const int MinCount = 1;
     public const int MaxCount = 100;
 
-    private const string MarkdownExtension = ".md";
+    /// <summary>
+    /// Pieces in these statuses take their date (spec HU-05 §3).
+    /// </summary>
+    public static bool Occupies(Piece piece) => piece.EffectiveDate is not null && IsReady(piece.Status);
 
     /// <summary>
-    /// Pieces in these statuses take their date (spec §3).
+    /// 'listo', 'programado' or 'publicado'.
     /// </summary>
-    public static bool Occupies(Piece piece) =>
-        piece.EffectiveDate is not null
-        && piece.Status is PieceStatus.Ready or PieceStatus.Scheduled or PieceStatus.Published;
+    public static bool IsReady(PieceStatus? status) =>
+        status is PieceStatus.Ready or PieceStatus.Scheduled or PieceStatus.Published;
 
     /// <summary>
     /// Returns up to <paramref name="count"/> free dates of <paramref name="seriesId"/>, from <paramref name="from"/> (included).
@@ -53,90 +55,101 @@ public static class SlotFinder
         }
 
         var id = seriesId?.Trim() ?? string.Empty;
-        var series = config.Find(id) ?? throw UnknownSeries(config, id);
-        if (series.Cadence is null && series.After is null)
+        var series = config.Find(id) ?? throw new SlotSearchException(UnknownSeriesMessage(config, id));
+        if (!HasRule(series))
         {
             throw new SlotSearchException($"La serie '{series.Id}' no tiene cadencia; no se pueden calcular huecos.");
         }
 
-        // Fixed order so the result never depends on the order of the input.
-        var ordered = pieces.OrderBy(p => p.Path, StringComparer.Ordinal).ToList();
-
-        var slots = series.After is { } link
-            ? FindAfter(series, link, ordered, from, count)
-            : FindByCadence(series, series.Cadence!, ordered, from, count);
-
+        var slots = Enumerate(series, Ordered(pieces), from, to: null).Take(count).ToList();
         return new SlotSearch(series, from, slots);
     }
 
-    private static SlotSearchException UnknownSeries(SeriesConfig config, string id) =>
-        config.Series.Count == 0
-            ? new SlotSearchException($"La serie '{id}' no existe: el fichero de series no define ninguna serie.")
-            : new SlotSearchException(
-                $"La serie '{id}' no existe en el fichero de series. Series disponibles: {string.Join(", ", config.Series.Select(s => s.Id))}.");
+    internal static bool HasRule(Series series) => series.Cadence is not null || series.After is not null;
 
-    private static List<Slot> FindByCadence(Series series, Cadence cadence, List<Piece> pieces, DateOnly from, int count)
+    internal static string UnknownSeriesMessage(SeriesConfig config, string id) =>
+        config.Series.Count == 0
+            ? $"La serie '{id}' no existe: el fichero de series no define ninguna serie."
+            : $"La serie '{id}' no existe en el fichero de series. Series disponibles: {string.Join(", ", config.Series.Select(s => s.Id))}.";
+
+    /// <summary>
+    /// Fixed order so results never depend on the order of the input.
+    /// </summary>
+    internal static List<Piece> Ordered(IEnumerable<Piece> pieces) =>
+        pieces.OrderBy(p => p.Path, StringComparer.Ordinal).ToList();
+
+    /// <summary>
+    /// Free dates of a series with a rule, in date order, from <paramref name="from"/> up to <paramref name="to"/> (both included).
+    /// Without <paramref name="to"/>, a cadence series yields dates forever: the caller limits the count.
+    /// </summary>
+    /// <param name="pieces">Pieces already sorted with <see cref="Ordered"/>.</param>
+    internal static IEnumerable<Slot> Enumerate(Series series, List<Piece> pieces, DateOnly from, DateOnly? to) =>
+        series.After is { } link
+            ? EnumerateAfter(series, link, pieces, from, to)
+            : EnumerateByCadence(series, series.Cadence!, pieces, from, to);
+
+    private static IEnumerable<Slot> EnumerateByCadence(Series series, Cadence cadence, List<Piece> pieces, DateOnly from, DateOnly? to)
     {
         var occupied = pieces
             .Where(p => p.Series == series.Id && Occupies(p))
             .Select(p => p.EffectiveDate!.Value)
             .ToHashSet();
 
-        var slots = new List<Slot>(count);
-        var date = from;
-        while (slots.Count < count)
+        var last = to ?? DateOnly.MaxValue;
+        for (var date = from; date <= last; date = date.AddDays(1))
         {
             if (cadence.Matches(date) && !occupied.Contains(date))
             {
-                slots.Add(new Slot(date, null, SameDay(series, pieces, date), CadenceMismatch: false));
+                yield return new Slot(date, null, SameDay(series, pieces, date), CadenceMismatch: false);
             }
 
             if (date == DateOnly.MaxValue)
             {
-                break;
+                yield break;
             }
-
-            date = date.AddDays(1);
         }
-
-        return slots;
     }
 
-    private static List<Slot> FindAfter(Series series, SeriesLink link, List<Piece> pieces, DateOnly from, int count)
+    private static IEnumerable<Slot> EnumerateAfter(Series series, SeriesLink link, List<Piece> pieces, DateOnly from, DateOnly? to)
     {
         var covered = pieces
             .Where(p => p.Series == series.Id)
             .SelectMany(p => p.DependsOn)
-            .Select(NormalizeReference)
+            .Select(PieceReference.Normalize)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        var last = to ?? DateOnly.MaxValue;
         return pieces
             .Where(p => p.Series == link.SeriesId && Occupies(p))
-            .Where(p => !covered.Contains(NormalizeReference(p.Path)))
-            .Select(p => (Related: p, Date: p.EffectiveDate!.Value.DayNumber + link.Days))
-            .Where(x => x.Date <= DateOnly.MaxValue.DayNumber)
-            .Select(x => (x.Related, Date: DateOnly.FromDayNumber(x.Date)))
-            .Where(x => x.Date >= from)
+            .Where(p => !covered.Contains(PieceReference.Normalize(p.Path)))
+            .Select(p => (Related: p, Day: p.EffectiveDate!.Value.DayNumber + link.Days))
+            .Where(x => x.Day <= DateOnly.MaxValue.DayNumber)
+            .Select(x => (x.Related, Date: DateOnly.FromDayNumber(x.Day)))
+            .Where(x => x.Date >= from && x.Date <= last)
             .OrderBy(x => x.Date)
             .ThenBy(x => x.Related.Path, StringComparer.Ordinal)
-            .Take(count)
             .Select(x => new Slot(
                 x.Date,
                 x.Related,
                 SameDay(series, pieces, x.Date),
-                CadenceMismatch: series.Cadence is { } cadence && !cadence.Matches(x.Date)))
-            .ToList();
+                CadenceMismatch: series.Cadence is { } cadence && !cadence.Matches(x.Date)));
     }
 
     private static List<Piece> SameDay(Series series, List<Piece> pieces, DateOnly date) =>
         pieces
             .Where(p => p.Series is not null && p.Series != series.Id && Occupies(p) && p.EffectiveDate == date)
             .ToList();
+}
 
-    /// <summary>
-    /// 'casos\01.md', 'casos/01.MD' and 'casos/01' all refer to the same piece.
-    /// </summary>
-    private static string NormalizeReference(string path)
+/// <summary>
+/// References between pieces ('depende_de'): 'casos\01.md', 'casos/01.MD' and 'casos/01' are the same piece.
+/// Compare normalized values with <see cref="StringComparer.OrdinalIgnoreCase"/>.
+/// </summary>
+internal static class PieceReference
+{
+    private const string MarkdownExtension = ".md";
+
+    public static string Normalize(string path)
     {
         var normalized = path.Trim().Replace('\\', '/');
         return normalized.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase)
