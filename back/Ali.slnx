@@ -7,5 +7,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Ali.Cli.Tests/Ali.Cli.Tests.csproj" />
     <Project Path="tests/Ali.Core.Tests/Ali.Core.Tests.csproj" />
+    <Project Path="tests/Ali.Mcp.Tests/Ali.Mcp.Tests.csproj" />
   </Folder>
 </Solution>

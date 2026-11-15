@@ -1,4 +1,5 @@
 using System.Globalization;
+using Ali.Core.Output;
 using Ali.Core.Scheduling;
 
 namespace Ali.Cli.Output;
@@ -11,7 +12,6 @@ internal static class TextSlotsWriter
     private const string Missing = "—";
     private const string ColumnGap = "  ";
     private const string DateFormat = "yyyy-MM-dd";
-    private const string MismatchWarning = "La fecha no coincide con la cadencia de la serie.";
 
     public static void Write(TextWriter output, SlotSearch search)
     {
@@ -55,7 +55,7 @@ internal static class TextSlotsWriter
             row.Add(slot.SameDay.Count == 0 ? Missing : string.Join(", ", slot.SameDay.Select(p => p.Path)));
             if (withWarning)
             {
-                row.Add(slot.CadenceMismatch ? MismatchWarning : Missing);
+                row.Add(slot.CadenceMismatch ? SlotDto.CadenceMismatchWarning : Missing);
             }
 
             return row.ToArray();

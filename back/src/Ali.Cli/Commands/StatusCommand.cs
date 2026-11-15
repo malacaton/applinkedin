@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Ali.Core.Content;
+using Ali.Core.Input;
 
 namespace Ali.Cli.Commands;
 
@@ -74,20 +75,20 @@ internal static class StatusCommand
             if (!PieceStatusNames.TryParse(statusValue, out var parsed))
             {
                 return context.Fail(
-                    $"Estado '{statusValue}' no válido. Valores admitidos: {string.Join(", ", PieceStatusNames.All)}.");
+                    StatusInput.InvalidMessage(statusValue));
             }
 
             status = parsed;
         }
 
-        if (!DateArgument.TryParse(context, plannedValue, out var plannedDate))
+        if (!DateInput.TryParse(plannedValue, context.Today(), out var plannedDate))
         {
-            return context.Fail($"Fecha '{plannedValue}' no válida en --fecha-prevista. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(plannedValue, "--fecha-prevista"));
         }
 
-        if (!DateArgument.TryParse(context, publishedValue, out var publishedDate))
+        if (!DateInput.TryParse(publishedValue, context.Today(), out var publishedDate))
         {
-            return context.Fail($"Fecha '{publishedValue}' no válida en --fecha-publicada. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(publishedValue, "--fecha-publicada"));
         }
 
         var changes = new PieceChanges
