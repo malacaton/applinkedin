@@ -2,7 +2,7 @@
 
 Planificador local de contenido para LinkedIn: centraliza tus artículos y publicaciones en Markdown, aplica la cadencia que tú definas por serie y te dice qué huecos tienes libres en el calendario. Se usa desde un asistente de IA (Claude u otro cliente compatible con MCP) o desde la línea de comandos.
 
-> **Estado: en desarrollo.** La v1 se está construyendo historia a historia; este README recoge el alcance y la arquitectura decididos.
+> **Estado: v1 completa.** Núcleo, CLI, servidor MCP, manual y skill de ejemplo. La v2 solo se abordará si la v1 se usa de verdad.
 
 ## Qué hace (y qué no)
 
@@ -58,6 +58,7 @@ Requiere .NET 10. El [manual de instalación y uso](docs/manual.md) explica todo
 2. Copia la carpeta [`ejemplo/`](ejemplo/) como punto de partida para tus `.md` y tu `series.yaml`.
 3. Añade el servidor a `claude_desktop_config.json`: comando `dotnet` y argumentos `<ruta>/publicado/mcp/ali-mcp.dll --contenido <tu carpeta>`.
 4. Reinicia Claude Desktop y comprueba que aparecen las cinco herramientas de appLinkedIn.
+5. Opcional: instala la [skill de ejemplo](skill/planificar-publicaciones/) para que el asistente sepa usar las herramientas y siga tus criterios editoriales.
 
 ## Estructura del repositorio
 
@@ -69,6 +70,7 @@ applinkedin/
 ├── CLAUDE.md                   Instrucciones para asistentes de IA
 ├── global.json                 SDK de .NET 10 y ejecutor de pruebas
 ├── ejemplo/                    Carpeta de contenido de ejemplo (series y piezas)
+├── skill/                      Skill de ejemplo para el asistente (uso y criterios editoriales)
 ├── back/
 │   ├── Ali.slnx                Solución .NET
 │   ├── src/
