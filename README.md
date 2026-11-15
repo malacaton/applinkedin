@@ -90,7 +90,8 @@ applinkedin/
 │   │   ├── Ali.Cli/            Línea de comandos
 │   │   └── Ali.Mcp/            Servidor MCP (stdio)
 │   └── tests/
-│       └── Ali.Core.Tests/     Pruebas del núcleo (xUnit v3)
+│       ├── Ali.Core.Tests/     Pruebas del núcleo (xUnit v3)
+│       └── Ali.Cli.Tests/      Pruebas de la línea de comandos
 └── docs/
     ├── decisiones/             Registro de decisiones (ADR)
     ├── historias/              Historias de usuario de la v1
@@ -107,6 +108,16 @@ Requiere el SDK de .NET 10. Desde la raíz del repositorio:
 dotnet build back
 dotnet test back
 ```
+
+## Uso de la CLI
+
+Mientras no esté instalada como herramienta (HU-09), se ejecuta con `dotnet run`:
+
+```bash
+dotnet run --project back/src/Ali.Cli -- listar --contenido "C:\ruta\a\tus\articulos"
+```
+
+`ali listar` admite filtros combinables: `--serie` y `--estado` (repetibles), `--sin-clasificar`, y `--desde` / `--hasta` (`AAAA-MM-DD`). Con `--json` la salida es JSON. Si no se indica `--contenido`, se usa la variable `ALI_CONTENIDO` o la carpeta actual. `ali listar --help` muestra la ayuda completa.
 
 ## Aviso
 

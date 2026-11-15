@@ -36,4 +36,9 @@ public sealed record Piece
     /// A piece without series is "unclassified".
     /// </summary>
     public bool IsUnclassified => Series is null;
+
+    /// <summary>
+    /// Date used to filter, sort and display: the published date if any, otherwise the planned date.
+    /// </summary>
+    public DateOnly? EffectiveDate => PublishedDate ?? PlannedDate;
 }

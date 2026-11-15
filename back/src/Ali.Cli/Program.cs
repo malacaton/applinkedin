@@ -1,4 +1,11 @@
-using Ali.Core;
+using System.Text;
+using Ali.Cli;
 
-Console.WriteLine($"{AppInfo.Name} {AppInfo.Version}");
-return 0;
+Console.OutputEncoding = Encoding.UTF8;
+
+return CliApp.Run(
+    args,
+    Console.Out,
+    Console.Error,
+    Environment.GetEnvironmentVariable,
+    Environment.CurrentDirectory);
