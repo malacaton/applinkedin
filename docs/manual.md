@@ -158,9 +158,23 @@ Añade `applinkedin` dentro de `mcpServers`, con tus rutas.
 
 ## 6. Comprobar que funciona
 
-1. Cierra Claude Desktop del todo y vuelve a abrirlo.
-2. En el menú de herramientas de la conversación debe aparecer **applinkedin** con cinco herramientas: `listar_piezas`, `buscar_huecos`, `validar_calendario`, `cambiar_estado` y `crear_pieza`.
-3. Prueba a preguntar, por ejemplo:
+1. Cierra Claude Desktop del todo, también desde el icono junto al reloj del sistema, y vuelve a abrirlo.
+2. Comprueba que el servidor está conectado. La forma más fiable es pedírselo al asistente en una conversación nueva:
+
+   > Valida mi calendario del 15 al 30 de noviembre de 2026.
+
+   Con la carpeta `ejemplo/` debe responder con 5 problemas: cuatro huecos y una pieza bloqueada (`resumenes/03-evaluar-un-rag.md`). Son los de la salida de `ali validar` de la sección 8. La primera vez, Claude Desktop te pide permiso para usar la herramienta.
+
+   **Ver la lista de herramientas.** La interfaz de Claude Desktop cambia entre versiones, así que el sitio exacto puede variar. Los habituales son:
+
+   | Dónde | Qué debe aparecer |
+   | --- | --- |
+   | Junto al cuadro de texto: el botón **+** o el icono de herramientas o conectores | **applinkedin** en la lista de conectores, con un interruptor. Al desplegarlo se ven sus cinco herramientas: `listar_piezas`, `buscar_huecos`, `validar_calendario`, `cambiar_estado` y `crear_pieza` |
+   | **Configuración → Desarrollador** | **applinkedin** en la lista de servidores MCP locales, en ejecución. Si falla, ahí se muestra el error |
+   | **Configuración → Conectores** (en algunas versiones) | **applinkedin** entre los conectores |
+
+   Si no aparece en ninguno de ellos, sigue la sección 9.
+3. Prueba otras preguntas, por ejemplo:
    - "¿Qué piezas tengo programadas o listas?"
    - "Propón las tres próximas fechas libres de casos-reales desde el 15 de noviembre de 2026."
    - "Valida mi calendario del 15 al 30 de noviembre de 2026."
