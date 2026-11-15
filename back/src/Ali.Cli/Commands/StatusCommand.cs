@@ -1,5 +1,4 @@
 using System.CommandLine;
-using System.Globalization;
 using Ali.Core.Content;
 
 namespace Ali.Cli.Commands;
@@ -9,8 +8,6 @@ namespace Ali.Cli.Commands;
 /// </summary>
 internal static class StatusCommand
 {
-    private const string DateFormat = "yyyy-MM-dd";
-    private const string TodayWord = "hoy";
     private const string Missing = "—";
 
     public static Command Create(CliContext context)
@@ -83,12 +80,12 @@ internal static class StatusCommand
             status = parsed;
         }
 
-        if (!TryParseDate(context, plannedValue, out var plannedDate))
+        if (!DateArgument.TryParse(context, plannedValue, out var plannedDate))
         {
             return context.Fail($"Fecha '{plannedValue}' no válida en --fecha-prevista. Formato esperado: AAAA-MM-DD u hoy.");
         }
 
-        if (!TryParseDate(context, publishedValue, out var publishedDate))
+        if (!DateArgument.TryParse(context, publishedValue, out var publishedDate))
         {
             return context.Fail($"Fecha '{publishedValue}' no válida en --fecha-publicada. Formato esperado: AAAA-MM-DD u hoy.");
         }
@@ -124,29 +121,5 @@ internal static class StatusCommand
         }
 
         return CliContext.Success;
-    }
-
-    private static bool TryParseDate(CliContext context, string? value, out DateOnly? date)
-    {
-        date = null;
-        if (value is null)
-        {
-            return true;
-        }
-
-        var trimmed = value.Trim();
-        if (trimmed.Equals(TodayWord, StringComparison.OrdinalIgnoreCase))
-        {
-            date = context.Today();
-            return true;
-        }
-
-        if (DateOnly.TryParseExact(trimmed, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
-        {
-            date = parsed;
-            return true;
-        }
-
-        return false;
     }
 }
