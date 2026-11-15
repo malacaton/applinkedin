@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Globalization;
 using Ali.Core.Content;
+using Ali.Core.Input;
 using Ali.Core.Scheduling;
 
 namespace Ali.Cli.Commands;
@@ -89,14 +90,14 @@ internal static class CreateCommand
         string? format,
         string[] dependsOn)
     {
-        if (!DateArgument.TryParse(context, dateValue, out var plannedDate))
+        if (!DateInput.TryParse(dateValue, context.Today(), out var plannedDate))
         {
-            return context.Fail($"Fecha '{dateValue}' no válida en --fecha. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(dateValue, "--fecha"));
         }
 
-        if (!DateArgument.TryParse(context, fromValue, out var from))
+        if (!DateInput.TryParse(fromValue, context.Today(), out var from))
         {
-            return context.Fail($"Fecha '{fromValue}' no válida en --desde. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(fromValue, "--desde"));
         }
 
         var contentFolder = context.ResolveContentFolder(contentOption);

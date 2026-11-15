@@ -2,6 +2,8 @@ using System.CommandLine;
 using System.Globalization;
 using Ali.Cli.Output;
 using Ali.Core.Content;
+using Ali.Core.Input;
+using Ali.Core.Output;
 
 namespace Ali.Cli.Commands;
 
@@ -82,7 +84,7 @@ internal static class ListCommand
             if (!PieceStatusNames.TryParse(value, out var status))
             {
                 return context.Fail(
-                    $"Estado '{value}' no válido. Valores admitidos: {string.Join(", ", PieceStatusNames.All)}.");
+                    StatusInput.InvalidMessage(value));
             }
 
             parsedStatuses.Add(status);
@@ -126,7 +128,7 @@ internal static class ListCommand
 
         if (json)
         {
-            JsonListWriter.Write(context.Output, pieces, catalog.Warnings);
+            context.Output.WriteLine(JsonOutput.Serialize(ListDocument.Create(pieces, catalog.Warnings)));
         }
         else
         {

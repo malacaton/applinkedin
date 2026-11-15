@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Ali.Cli.Commands;
 using Ali.Core;
+using Ali.Core.Input;
 
 namespace Ali.Cli;
 
@@ -50,7 +51,7 @@ public sealed record CliContext(
     Func<string, string?> GetEnvironmentVariable,
     string CurrentDirectory)
 {
-    public const string ContentFolderVariable = "ALI_CONTENIDO";
+    public const string ContentFolderVariable = ContentLocation.ContentFolderVariable;
 
     public const int Success = 0;
 

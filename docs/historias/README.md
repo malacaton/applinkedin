@@ -12,7 +12,7 @@ Orden recomendado de desarrollo. Cada historia es la entrada de un ciclo SDD (ve
 | [HU-05](HU-05-buscar-huecos.md) | Buscar huecos libres | HU-02, HU-03 | En curso |
 | [HU-06](HU-06-validar-calendario.md) | Validar el calendario | HU-05 | En curso |
 | [HU-07](HU-07-crear-pieza.md) | Crear una pieza nueva | HU-01, HU-02 | En curso |
-| [HU-08](HU-08-servidor-mcp.md) | Servidor MCP | HU-03 a HU-07 | Pendiente |
+| [HU-08](HU-08-servidor-mcp.md) | Servidor MCP | HU-03 a HU-07 | En curso |
 | [HU-09](HU-09-instalacion.md) | Instalación y uso con Claude Desktop | HU-08 | Pendiente |
 | [HU-10](HU-10-skill-ejemplo.md) | Skill de ejemplo | HU-08 | Pendiente |
 

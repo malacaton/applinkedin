@@ -2,6 +2,8 @@ using System.CommandLine;
 using System.Globalization;
 using Ali.Cli.Output;
 using Ali.Core.Content;
+using Ali.Core.Input;
+using Ali.Core.Output;
 using Ali.Core.Scheduling;
 
 namespace Ali.Cli.Commands;
@@ -70,9 +72,9 @@ internal static class SlotsCommand
         string? countValue,
         bool json)
     {
-        if (!DateArgument.TryParse(context, fromValue, out var from))
+        if (!DateInput.TryParse(fromValue, context.Today(), out var from))
         {
-            return context.Fail($"Fecha '{fromValue}' no válida en --desde. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(fromValue, "--desde"));
         }
 
         var count = DefaultCount;
@@ -101,7 +103,7 @@ internal static class SlotsCommand
 
         if (json)
         {
-            JsonSlotsWriter.Write(context.Output, search, catalog.Warnings);
+            context.Output.WriteLine(JsonOutput.Serialize(SlotsDocument.Create(search, catalog.Warnings)));
         }
         else
         {

@@ -65,8 +65,11 @@ El flujo previsto será:
 {
   "mcpServers": {
     "applinkedin": {
-      "command": "<comando del servidor, se definirá en la v1>",
-      "args": ["--content", "C:\\ruta\\a\\tus\\articulos"]
+      "command": "dotnet",
+      "args": [
+        "C:\\ruta\\a\\applinkedin\\back\\src\\Ali.Mcp\\bin\\Release\\net10.0\\ali-mcp.dll",
+        "--contenido", "C:\\ruta\\a\\tus\\articulos"
+      ]
     }
   }
 }
@@ -91,7 +94,8 @@ applinkedin/
 │   │   └── Ali.Mcp/            Servidor MCP (stdio)
 │   └── tests/
 │       ├── Ali.Core.Tests/     Pruebas del núcleo (xUnit v3)
-│       └── Ali.Cli.Tests/      Pruebas de la línea de comandos
+│       ├── Ali.Cli.Tests/      Pruebas de la línea de comandos
+│       └── Ali.Mcp.Tests/      Pruebas del servidor MCP
 └── docs/
     ├── decisiones/             Registro de decisiones (ADR)
     ├── historias/              Historias de usuario de la v1
@@ -150,6 +154,16 @@ ali crear casos-reales "Qué aprendimos del RAG" --fecha-libre --formato articul
 ```
 
 El fichero va a la `carpeta` de la serie (por defecto, su `id`) y se nombra según su plantilla `fichero` (por defecto, `{nn}-{titulo}`). La numeración sigue a la pieza de número más alto de la serie. `--fecha-libre` asigna la primera fecha libre; en series con `despues_de`, también añade la dependencia. Nunca sobrescribe un fichero existente.
+
+## Servidor MCP
+
+`ali-mcp` expone el núcleo a un asistente de IA por stdio, con cinco herramientas: `listar_piezas`, `buscar_huecos`, `validar_calendario`, `cambiar_estado` y `crear_pieza`. Devuelven el mismo JSON que `--json` de la CLI y cumplen sus mismas reglas.
+
+```bash
+dotnet run --project back/src/Ali.Mcp -- --contenido "C:\ruta\a\tus\articulos"
+```
+
+La carpeta de contenido es obligatoria (`--contenido` o `ALI_CONTENIDO`). El fichero de series se toma de `--series`, de `ALI_SERIES` o de `series.yaml` en la carpeta. El catálogo se lee en cada llamada, así que los cambios hechos a mano se ven al momento.
 
 ## Aviso
 

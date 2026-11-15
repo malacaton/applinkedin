@@ -12,3 +12,4 @@ Cada decisión relevante se registra en un fichero `NNNN-titulo.md` con contexto
 | [0006](0006-aplicacion-local-sin-autenticacion.md) | Aplicación solo local, sin autenticación ni frameworks de aplicación | Aceptada |
 | [0007](0007-yamldotnet-para-metadatos.md) | YamlDotNet para leer los metadatos | Aceptada |
 | [0008](0008-system-commandline-para-la-cli.md) | System.CommandLine para la CLI | Aceptada |
+| [0009](0009-sdk-mcp-y-host-generico.md) | SDK oficial de MCP y host genérico de .NET para el servidor | Aceptada |

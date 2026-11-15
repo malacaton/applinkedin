@@ -1,6 +1,8 @@
 using System.CommandLine;
 using Ali.Cli.Output;
 using Ali.Core.Content;
+using Ali.Core.Input;
+using Ali.Core.Output;
 using Ali.Core.Scheduling;
 
 namespace Ali.Cli.Commands;
@@ -70,14 +72,14 @@ internal static class ValidateCommand
         string[] seriesValues,
         bool json)
     {
-        if (!DateArgument.TryParse(context, fromValue, out var fromDate))
+        if (!DateInput.TryParse(fromValue, context.Today(), out var fromDate))
         {
-            return context.Fail($"Fecha '{fromValue}' no válida en --desde. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(fromValue, "--desde"));
         }
 
-        if (!DateArgument.TryParse(context, toValue, out var toDate))
+        if (!DateInput.TryParse(toValue, context.Today(), out var toDate))
         {
-            return context.Fail($"Fecha '{toValue}' no válida en --hasta. Formato esperado: AAAA-MM-DD u hoy.");
+            return context.Fail(DateInput.InvalidMessage(toValue, "--hasta"));
         }
 
         var from = fromDate ?? context.Today();
@@ -99,7 +101,7 @@ internal static class ValidateCommand
 
         if (json)
         {
-            JsonValidationWriter.Write(context.Output, report, catalog.Warnings);
+            context.Output.WriteLine(JsonOutput.Serialize(ReportDocument.Create(report, catalog.Warnings)));
         }
         else
         {
