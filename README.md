@@ -143,6 +143,14 @@ ali validar --desde hoy --hasta 2026-12-31 -s casos-reales
 
 Por defecto revisa desde hoy hasta 28 días después. Los problemas de dependencias y de series se buscan en todo el catálogo. El comando termina con código 0 aunque encuentre problemas.
 
+`ali crear` crea el fichero de una pieza nueva con la convención de su serie y un bloque YAML con `serie` y `estado: idea`:
+
+```bash
+ali crear casos-reales "Qué aprendimos del RAG" --fecha-libre --formato articulo
+```
+
+El fichero va a la `carpeta` de la serie (por defecto, su `id`) y se nombra según su plantilla `fichero` (por defecto, `{nn}-{titulo}`). La numeración sigue a la pieza de número más alto de la serie. `--fecha-libre` asigna la primera fecha libre; en series con `despues_de`, también añade la dependencia. Nunca sobrescribe un fichero existente.
+
 ## Aviso
 
 Proyecto personal e independiente. No está afiliado, patrocinado ni respaldado por LinkedIn Corporation. LinkedIn es una marca registrada de LinkedIn Corporation.
