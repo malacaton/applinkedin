@@ -12,12 +12,21 @@ desktop.ini
 *.local.json
 config.local.*
 
-# Salidas de compilación (se ajustará al stack de la v1)
+# Salidas de compilación y pruebas (.NET; dist/ y node_modules/ para la v2)
 bin/
 obj/
 dist/
 build/
 node_modules/
+TestResults/
+*.binlog
+coverage*.xml
+coverage*.json
+
+# Estado local de Visual Studio
+.vs/
+*.user
+*.suo
 
 # Documentación y notas privadas (no se publican)
 private/
