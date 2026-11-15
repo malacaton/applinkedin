@@ -8,7 +8,7 @@ Orden recomendado de desarrollo. Cada historia es la entrada de un ciclo SDD (ve
 | [HU-01](HU-01-catalogo.md) | Leer el catálogo de piezas | HU-00 | En curso |
 | [HU-02](HU-02-series-y-cadencias.md) | Definir series y cadencias | HU-00 | En curso |
 | [HU-03](HU-03-listar-piezas.md) | Listar piezas con filtros | HU-01, HU-02 | En curso |
-| [HU-04](HU-04-cambiar-estado.md) | Cambiar el estado de una pieza | HU-01 | Pendiente |
+| [HU-04](HU-04-cambiar-estado.md) | Cambiar el estado de una pieza | HU-01 | En curso |
 | [HU-05](HU-05-buscar-huecos.md) | Buscar huecos libres | HU-02, HU-03 | Pendiente |
 | [HU-06](HU-06-validar-calendario.md) | Validar el calendario | HU-05 | Pendiente |
 | [HU-07](HU-07-crear-pieza.md) | Crear una pieza nueva | HU-01, HU-02 | Pendiente |

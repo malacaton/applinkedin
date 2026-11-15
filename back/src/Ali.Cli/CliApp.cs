@@ -12,18 +12,25 @@ public static class CliApp
     /// <summary>
     /// Parses <paramref name="args"/>, runs the matching command and returns the exit code.
     /// </summary>
+    /// <param name="today">Clock for the word "hoy"; by default, the local date.</param>
     public static int Run(
         string[] args,
         TextWriter output,
         TextWriter error,
         Func<string, string?> getEnvironmentVariable,
-        string currentDirectory)
+        string currentDirectory,
+        Func<DateOnly>? today = null)
     {
         var context = new CliContext(output, error, getEnvironmentVariable, currentDirectory);
+        if (today is not null)
+        {
+            context = context with { Today = today };
+        }
 
         var root = new RootCommand($"{AppInfo.Name}: planificador local de contenido para LinkedIn.")
         {
             ListCommand.Create(context),
+            StatusCommand.Create(context),
         };
 
         var invocation = new InvocationConfiguration { Output = output, Error = error };
@@ -45,6 +52,11 @@ public sealed record CliContext(
     public const int Success = 0;
 
     public const int Failure = 1;
+
+    /// <summary>
+    /// Local date used for the word "hoy" in date options.
+    /// </summary>
+    public Func<DateOnly> Today { get; init; } = () => DateOnly.FromDateTime(DateTime.Now);
 
     /// <summary>
     /// Content folder: explicit option, then ALI_CONTENIDO, then the current directory.

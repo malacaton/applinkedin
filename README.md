@@ -119,6 +119,14 @@ dotnet run --project back/src/Ali.Cli -- listar --contenido "C:\ruta\a\tus\artic
 
 `ali listar` admite filtros combinables: `--serie` y `--estado` (repetibles), `--sin-clasificar`, y `--desde` / `--hasta` (`AAAA-MM-DD`). Con `--json` la salida es JSON. Si no se indica `--contenido`, se usa la variable `ALI_CONTENIDO` o la carpeta actual. `ali listar --help` muestra la ayuda completa.
 
+`ali estado` cambia el estado, las fechas o la URL de una pieza tocando solo su bloque YAML; el resto del fichero queda intacto:
+
+```bash
+ali estado casos/02-memoria -e publicado --fecha-publicada hoy --url https://www.linkedin.com/pulse/...
+```
+
+Las fechas admiten `AAAA-MM-DD` o `hoy`. Marcar como `publicado` exige `fecha_publicada`. Si la pieza no tiene bloque YAML, se crea al principio. Cualquier error deja el fichero sin tocar.
+
 ## Aviso
 
 Proyecto personal e independiente. No está afiliado, patrocinado ni respaldado por LinkedIn Corporation. LinkedIn es una marca registrada de LinkedIn Corporation.
