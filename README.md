@@ -127,6 +127,14 @@ ali estado casos/02-memoria -e publicado --fecha-publicada hoy --url https://www
 
 Las fechas admiten `AAAA-MM-DD` o `hoy`. Marcar como `publicado` exige `fecha_publicada`. Si la pieza no tiene bloque YAML, se crea al principio. Cualquier error deja el fichero sin tocar.
 
+`ali huecos` propone las próximas fechas libres de una serie según su cadencia (o su `despues_de`):
+
+```bash
+ali huecos casos-reales -n 5 --desde hoy
+```
+
+Una fecha está ocupada si la serie ya tiene ese día una pieza `listo`, `programado` o `publicado`. La columna `COINCIDE CON` muestra, solo como información, las piezas de otras series del mismo día. Las series se leen de `series.yaml` en la carpeta de contenido, o del fichero indicado con `--series` o `ALI_SERIES`. Con `--json` la salida es JSON.
+
 ## Aviso
 
 Proyecto personal e independiente. No está afiliado, patrocinado ni respaldado por LinkedIn Corporation. LinkedIn es una marca registrada de LinkedIn Corporation.

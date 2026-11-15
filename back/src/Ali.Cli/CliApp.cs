@@ -31,6 +31,7 @@ public static class CliApp
         {
             ListCommand.Create(context),
             StatusCommand.Create(context),
+            SlotsCommand.Create(context),
         };
 
         var invocation = new InvocationConfiguration { Output = output, Error = error };
