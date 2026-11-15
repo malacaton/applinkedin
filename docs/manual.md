@@ -329,11 +329,13 @@ La carpeta [`skill/planificar-publicaciones/`](../skill/planificar-publicaciones
 
 1. Comprime la carpeta `planificar-publicaciones` (la carpeta entera, no solo su contenido):
 
-   - Windows (PowerShell):
+   - Windows (PowerShell o símbolo del sistema), con el `tar` que trae Windows:
 
      ```powershell
-     Compress-Archive -Path skill\planificar-publicaciones -DestinationPath planificar-publicaciones.zip
+     tar -a -c -f planificar-publicaciones.zip -C skill planificar-publicaciones
      ```
+
+     No uses `Compress-Archive` ni "Enviar a → Carpeta comprimida": en Windows PowerShell 5.1 guardan las rutas con `\`. Claude Desktop rechaza ese `.zip` con el error *"Zip file contains path with invalid characters"*.
 
    - macOS:
 

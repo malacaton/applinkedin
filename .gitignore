@@ -15,6 +15,7 @@ config.local.*
 # Salidas de compilación y pruebas (.NET; dist/ y node_modules/ para la v2)
 bin/
 publicado/
+planificar-publicaciones.zip
 obj/
 dist/
 build/
