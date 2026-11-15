@@ -7,7 +7,20 @@ namespace Ali.Core.Scheduling;
 /// <param name="Name">Display name.</param>
 /// <param name="Cadence">Publication rule; null means free publication.</param>
 /// <param name="After">Link to another series whose pieces this one follows; null if none.</param>
-public sealed record Series(string Id, string Name, Cadence? Cadence, SeriesLink? After);
+/// <param name="Folder">Folder for new pieces, relative to the content root with '/'; null means <paramref name="Id"/>.</param>
+/// <param name="FileName">File name pattern for new pieces; null means <see cref="FileNameTemplate.Default"/>.</param>
+public sealed record Series(
+    string Id,
+    string Name,
+    Cadence? Cadence,
+    SeriesLink? After,
+    string? Folder = null,
+    FileNameTemplate? FileName = null)
+{
+    public string ResolvedFolder => Folder ?? Id;
+
+    public FileNameTemplate ResolvedFileName => FileName ?? FileNameTemplate.Default;
+}
 
 /// <summary>
 /// The pieces of a series go <paramref name="Days"/> days after their related piece in <paramref name="SeriesId"/>.

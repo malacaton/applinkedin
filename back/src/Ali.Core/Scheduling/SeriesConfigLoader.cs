@@ -21,11 +21,13 @@ public sealed partial class SeriesConfigLoader
     private const string AnchorKey = "desde";
     private const string TimeKey = "hora";
     private const string LinkSeriesKey = "serie";
+    private const string FolderKey = "carpeta";
+    private const string FileNameKey = "fichero";
 
     private const int MinLinkDays = 1;
     private const int MaxLinkDays = 60;
 
-    private static readonly string[] SeriesKeys = [IdKey, NameKey, CadenceKey, AfterKey];
+    private static readonly string[] SeriesKeys = [IdKey, NameKey, CadenceKey, AfterKey, FolderKey, FileNameKey];
     private static readonly string[] CadenceKeys = [DaysKey, FrequencyKey, AnchorKey, TimeKey];
     private static readonly string[] LinkKeys = [LinkSeriesKey, DaysKey];
     private static readonly string[] TimeFormats = ["HH:mm", "H:mm"];
@@ -88,7 +90,7 @@ public sealed partial class SeriesConfigLoader
             throw new SeriesConfigException(fullPath, errors);
         }
 
-        return new SeriesConfig(drafts.Select(d => new Series(d.Id!, d.Name!, d.Cadence, d.After)).ToList());
+        return new SeriesConfig(drafts.Select(d => new Series(d.Id!, d.Name!, d.Cadence, d.After, d.Folder, d.FileName)).ToList());
     }
 
     private static SeriesConfigException Fail(string path, string reason) =>
@@ -170,7 +172,48 @@ public sealed partial class SeriesConfigLoader
 
         draft.Cadence = ReadCadence(mapping, label, errors);
         draft.After = ReadLink(mapping, label, errors);
+        draft.Folder = ReadFolder(mapping, label, errors);
+        draft.FileName = ReadFileName(mapping, label, errors);
         return draft;
+    }
+
+    private static string? ReadFolder(YamlMappingNode series, string label, List<SeriesConfigError> errors)
+    {
+        var value = ReadText(series, FolderKey, label, errors);
+        if (value is null)
+        {
+            return null;
+        }
+
+        var segments = value.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var invalid = segments.Length == 0
+            || System.IO.Path.IsPathRooted(value)
+            || value.Contains(':')
+            || segments.Any(s => s == ".." || s.StartsWith('.') || s.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0);
+        if (invalid)
+        {
+            errors.Add(new SeriesConfigError(label, FolderKey, "debe ser una ruta relativa dentro de la carpeta de contenido."));
+            return null;
+        }
+
+        return string.Join('/', segments);
+    }
+
+    private static FileNameTemplate? ReadFileName(YamlMappingNode series, string label, List<SeriesConfigError> errors)
+    {
+        var value = ReadText(series, FileNameKey, label, errors);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (FileNameTemplate.TryParse(value, out var template, out var reason))
+        {
+            return template;
+        }
+
+        errors.Add(new SeriesConfigError(label, FileNameKey, reason!));
+        return null;
     }
 
     private static Cadence? ReadCadence(YamlMappingNode series, string label, List<SeriesConfigError> errors)
@@ -521,6 +564,10 @@ public sealed partial class SeriesConfigLoader
         public Cadence? Cadence { get; set; }
 
         public SeriesLink? After { get; set; }
+
+        public string? Folder { get; set; }
+
+        public FileNameTemplate? FileName { get; set; }
 
         public static string LabelFor(string id) => $"Serie '{id}'";
     }

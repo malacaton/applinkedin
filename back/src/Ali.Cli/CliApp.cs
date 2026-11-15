@@ -33,6 +33,7 @@ public static class CliApp
             StatusCommand.Create(context),
             SlotsCommand.Create(context),
             ValidateCommand.Create(context),
+            CreateCommand.Create(context),
         };
 
         var invocation = new InvocationConfiguration { Output = output, Error = error };
