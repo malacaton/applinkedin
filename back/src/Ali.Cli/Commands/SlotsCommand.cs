@@ -11,8 +11,6 @@ namespace Ali.Cli.Commands;
 /// </summary>
 internal static class SlotsCommand
 {
-    public const string SeriesFileVariable = "ALI_SERIES";
-    public const string DefaultSeriesFile = "series.yaml";
     private const int DefaultCount = 5;
 
     public static Command Create(CliContext context)
@@ -28,7 +26,7 @@ internal static class SlotsCommand
         };
         var seriesFile = new Option<string?>("--series")
         {
-            Description = $"Fichero de series. Por defecto, {SeriesFileVariable} o {DefaultSeriesFile} en la carpeta de contenido.",
+            Description = SeriesFile.Description,
             HelpName = "fichero",
         };
         var from = new Option<string?>("--desde")
@@ -93,7 +91,7 @@ internal static class SlotsCommand
         try
         {
             catalog = new CatalogReader().Read(contentFolder);
-            config = new SeriesConfigLoader().Load(ResolveSeriesFile(context, seriesFileOption, contentFolder));
+            config = new SeriesConfigLoader().Load(SeriesFile.Resolve(context, seriesFileOption, contentFolder));
             search = SlotFinder.Find(config, catalog.Pieces, seriesId, from ?? context.Today(), count);
         }
         catch (Exception ex) when (ex is DirectoryNotFoundException or SeriesConfigException or SlotSearchException)
@@ -112,20 +110,5 @@ internal static class SlotsCommand
         }
 
         return CliContext.Success;
-    }
-
-    private static string ResolveSeriesFile(CliContext context, string? option, string contentFolder)
-    {
-        if (!string.IsNullOrWhiteSpace(option))
-        {
-            return Path.GetFullPath(option, context.CurrentDirectory);
-        }
-
-        if (context.GetEnvironmentVariable(SeriesFileVariable) is { } fromEnvironment && !string.IsNullOrWhiteSpace(fromEnvironment))
-        {
-            return Path.GetFullPath(fromEnvironment, context.CurrentDirectory);
-        }
-
-        return Path.Combine(contentFolder, DefaultSeriesFile);
     }
 }
