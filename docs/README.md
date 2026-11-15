@@ -2,6 +2,7 @@
 
 | Carpeta / fichero | Contenido |
 | --- | --- |
+| [manual.md](manual.md) | Manual de instalación y uso: compilar, configurar, conectar con Claude Desktop y la CLI |
 | [decisiones/](decisiones/) | Registro de decisiones de arquitectura (ADR): qué se decidió, por qué y qué se descartó |
 | [historias/](historias/) | Historias de usuario (HU) de la v1, punto de partida de cada ciclo SDD |
 | [especificaciones/](especificaciones/) | Especificación de cada historia (`HU-NN.md`): comportamiento, contrato y criterios refinados |

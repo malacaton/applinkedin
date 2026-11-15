@@ -52,30 +52,12 @@ flowchart LR
 
 ## Instalación
 
-> Pendiente de la v1. Stack: .NET 10 para núcleo, CLI y servidor MCP; Angular 22 para la interfaz de la v2 ([ADR-0001](docs/decisiones/0001-stack-tecnologico.md)).
+Requiere .NET 10. El [manual de instalación y uso](docs/manual.md) explica todos los pasos: compilar, preparar tu carpeta de contenido y el fichero de series, conectar con Claude Desktop y comprobar que funciona. Resumido:
 
-El flujo previsto será:
-
-1. Clonar el repositorio.
-2. Compilar o instalar el paquete según el stack elegido.
-3. Indicar la carpeta donde están tus `.md` y el fichero de reglas de cadencia.
-4. Registrar el servidor MCP en tu cliente. En Claude Desktop, añadiendo una entrada en `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "applinkedin": {
-      "command": "dotnet",
-      "args": [
-        "C:\\ruta\\a\\applinkedin\\back\\src\\Ali.Mcp\\bin\\Release\\net10.0\\ali-mcp.dll",
-        "--contenido", "C:\\ruta\\a\\tus\\articulos"
-      ]
-    }
-  }
-}
-```
-
-5. Reiniciar el cliente y comprobar que aparecen las herramientas de appLinkedIn.
+1. Clona el repositorio y publica el servidor con `dotnet publish back/src/Ali.Mcp -c Release -o publicado/mcp`.
+2. Copia la carpeta [`ejemplo/`](ejemplo/) como punto de partida para tus `.md` y tu `series.yaml`.
+3. Añade el servidor a `claude_desktop_config.json`: comando `dotnet` y argumentos `<ruta>/publicado/mcp/ali-mcp.dll --contenido <tu carpeta>`.
+4. Reinicia Claude Desktop y comprueba que aparecen las cinco herramientas de appLinkedIn.
 
 ## Estructura del repositorio
 
@@ -86,6 +68,7 @@ applinkedin/
 ├── NOTICE
 ├── CLAUDE.md                   Instrucciones para asistentes de IA
 ├── global.json                 SDK de .NET 10 y ejecutor de pruebas
+├── ejemplo/                    Carpeta de contenido de ejemplo (series y piezas)
 ├── back/
 │   ├── Ali.slnx                Solución .NET
 │   ├── src/
@@ -101,6 +84,7 @@ applinkedin/
     ├── historias/              Historias de usuario de la v1
     ├── especificaciones/       Especificación de cada historia
     ├── planes/                 Plan técnico y tareas de cada historia
+    ├── manual.md               Manual de instalación y uso
     └── bitacora.md             Problemas encontrados y cómo se resolvieron
 ```
 

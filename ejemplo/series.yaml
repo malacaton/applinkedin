@@ -1,0 +1,28 @@
+# Series de ejemplo de appLinkedIn. Copia esta carpeta y adáptala a tu contenido.
+series:
+  - id: casos-reales
+    nombre: Casos reales
+    carpeta: casos
+    cadencia:
+      dias: martes
+      frecuencia: semanal
+      hora: "09:00"
+
+  - id: fundamentos
+    nombre: Fundamentos
+    carpeta: fundamentos
+    cadencia:
+      dias: [lunes, jueves]
+      frecuencia: quincenal
+      desde: 2026-11-02          # semana de referencia para la alternancia
+
+  - id: resumen-caso
+    nombre: Resumen de un caso
+    carpeta: resumenes
+    despues_de:
+      serie: casos-reales
+      dias: 2                    # dos días después de su caso
+
+  - id: notas
+    nombre: Notas sueltas        # sin cadencia: publicación libre
+    carpeta: notas
