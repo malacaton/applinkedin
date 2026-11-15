@@ -2,7 +2,7 @@
 
 Planificador local de contenido para LinkedIn: centraliza tus artículos y publicaciones en Markdown, aplica la cadencia que tú definas por serie y te dice qué huecos tienes libres en el calendario. Se usa desde un asistente de IA (Claude u otro cliente compatible con MCP) o desde la línea de comandos.
 
-> **Estado: en desarrollo.** La v1 se está construyendo historia a historia; este README recoge el alcance y la arquitectura decididos.
+> **Estado: v1 completa.** Núcleo, CLI, servidor MCP, manual y skill de ejemplo. La v2 solo se abordará si la v1 se usa de verdad.
 
 ## Qué hace (y qué no)
 
