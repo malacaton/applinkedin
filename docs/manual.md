@@ -1,6 +1,6 @@
 # Manual de instalación y uso
 
-Este manual explica cómo instalar appLinkedIn y cómo preparar tus ficheros. También cuenta cómo conectarlo a Claude Desktop (o a otro cliente MCP) y cómo probarlo con la carpeta de ejemplo del repositorio.
+Este manual explica cómo instalar appLinkedIn y cómo preparar tus ficheros. También cuenta cómo conectarlo a Claude Desktop (o a otro cliente MCP) y cómo probarlo con la carpeta de ejemplo del repositorio. Al final se explica la skill de ejemplo para el asistente.
 
 ## 1. Requisitos
 
@@ -301,3 +301,47 @@ Actualizado casos/02-memoria-de-los-agentes.md:
 
 - **Todo es local.** El servidor y la CLI solo leen y escriben en tu carpeta de contenido. No se conectan a Internet ni a LinkedIn (ADR-0003 y ADR-0005).
 - **Lo que llega al modelo de IA:** tu cliente de IA sí envía al modelo lo que lee con las herramientas (metadatos y rutas de tus piezas), según sus propias condiciones de uso.
+
+## 11. Skill de ejemplo
+
+La carpeta [`skill/planificar-publicaciones/`](../skill/planificar-publicaciones/) contiene una skill para tu asistente. Le explica cuándo usar cada herramienta y qué criterios editoriales seguir, para que no tengas que repetirlo en cada conversación. Tiene dos ficheros:
+
+| Fichero | Contenido |
+| --- | --- |
+| `SKILL.md` | Qué es appLinkedIn, cuándo usar cada herramienta, reglas (no inventar fechas, confirmar antes de escribir…) y flujos típicos |
+| `criterios-editoriales.md` | Criterios de ejemplo: longitudes por formato, tono, tus series, preferencias de calendario y lista de revisión. **Personalízalo** |
+
+### Instalar en Claude Desktop
+
+1. Comprime la carpeta `planificar-publicaciones` (la carpeta entera, no solo su contenido):
+
+   - Windows (PowerShell):
+
+     ```powershell
+     Compress-Archive -Path skill\planificar-publicaciones -DestinationPath planificar-publicaciones.zip
+     ```
+
+   - macOS:
+
+     ```bash
+     cd skill && zip -r ../planificar-publicaciones.zip planificar-publicaciones
+     ```
+
+2. En Claude Desktop, ve a **Configuración → Capacidades → Skills**, sube el `.zip` y actívala.
+
+### Instalar en Claude Code
+
+Copia la carpeta a tus skills personales, o a las del proyecto donde trabajes:
+
+```bash
+cp -r skill/planificar-publicaciones ~/.claude/skills/
+```
+
+### Adaptarla
+
+- **Tus criterios:** edita `criterios-editoriales.md` con tus longitudes, tu tono, la descripción de **tus** series y tus preferencias de calendario. `SKILL.md` solo hay que tocarlo si cambias cómo quieres que use las herramientas.
+- **Tras cada cambio:** en Claude Desktop, vuelve a comprimirla y subirla. En Claude Code, basta con guardar el fichero.
+
+### Comprobar que se activa
+
+Pide, por ejemplo: "Planifica mis próximas dos semanas de LinkedIn". Con la skill activa, el asistente empieza revisando el calendario (`validar_calendario`) y buscando huecos (`buscar_huecos`). Antes de crear o cambiar ninguna pieza, te enseña el plan y pide confirmación.
