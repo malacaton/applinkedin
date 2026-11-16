@@ -15,5 +15,6 @@ Orden recomendado de desarrollo. Cada historia es la entrada de un ciclo SDD (ve
 | [HU-08](HU-08-servidor-mcp.md) | Servidor MCP | HU-03 a HU-07 | Hecha |
 | [HU-09](HU-09-instalacion.md) | Instalación y uso con Claude Desktop | HU-08 | Hecha |
 | [HU-10](HU-10-skill-ejemplo.md) | Skill de ejemplo | HU-08 | Hecha |
+| [HU-11](HU-11-convencion-nombres-y-hora.md) | Convención de nombres propia y hora de publicación | HU-04, HU-07 | En curso |
 
 Los criterios de aceptación son el punto de partida: la especificación de cada historia puede refinarlos.

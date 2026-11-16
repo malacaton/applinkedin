@@ -50,6 +50,7 @@ public sealed record PieceDto(
     [property: JsonPropertyName("serie")] string? Series,
     [property: JsonPropertyName("estado")] string? Status,
     [property: JsonPropertyName("fecha")] string? Date,
+    [property: JsonPropertyName("hora")] string? Time,
     [property: JsonPropertyName("fecha_prevista")] string? PlannedDate,
     [property: JsonPropertyName("fecha_publicada")] string? PublishedDate,
     [property: JsonPropertyName("url")] string? Url,
@@ -61,6 +62,7 @@ public sealed record PieceDto(
         piece.Series,
         piece.Status is { } status ? PieceStatusNames.ToName(status) : null,
         JsonOutput.Format(piece.EffectiveDate),
+        piece.Time?.ToString("HH:mm", CultureInfo.InvariantCulture),
         JsonOutput.Format(piece.PlannedDate),
         JsonOutput.Format(piece.PublishedDate),
         piece.Url,
@@ -162,12 +164,23 @@ public sealed record FieldChangeDto(
 /// </summary>
 public sealed record UpdateDocument(
     [property: JsonPropertyName("fichero")] string Path,
-    [property: JsonPropertyName("cambios")] IReadOnlyList<FieldChangeDto> Changes)
+    [property: JsonPropertyName("cambios")] IReadOnlyList<FieldChangeDto> Changes,
+    [property: JsonPropertyName("renombrado")] IReadOnlyList<RenamedDto> Renamed,
+    [property: JsonPropertyName("aviso")] string? Warning)
 {
     public static UpdateDocument Create(PieceUpdateResult result) => new(
         result.Path,
-        result.Changes.Select(c => new FieldChangeDto(c.Field, c.OldValue, c.NewValue)).ToList());
+        result.Changes.Select(c => new FieldChangeDto(c.Field, c.OldValue, c.NewValue)).ToList(),
+        result.Renamed.Select(r => new RenamedDto(r.Before, r.After)).ToList(),
+        result.RenameWarning);
 }
+
+/// <summary>
+/// A file renamed by 'cambiar_estado'.
+/// </summary>
+public sealed record RenamedDto(
+    [property: JsonPropertyName("antes")] string Before,
+    [property: JsonPropertyName("despues")] string After);
 
 /// <summary>
 /// 'crear_pieza': the new file and its metadata.
@@ -177,6 +190,7 @@ public sealed record CreatedDocument(
     [property: JsonPropertyName("serie")] string? Series,
     [property: JsonPropertyName("estado")] string? Status,
     [property: JsonPropertyName("fecha_prevista")] string? PlannedDate,
+    [property: JsonPropertyName("hora")] string? Time,
     [property: JsonPropertyName("formato")] string? Format,
     [property: JsonPropertyName("depende_de")] IReadOnlyList<string> DependsOn)
 {
@@ -185,6 +199,7 @@ public sealed record CreatedDocument(
         created.Piece.Series,
         created.Piece.Status is { } status ? PieceStatusNames.ToName(status) : null,
         JsonOutput.Format(created.Piece.PlannedDate),
+        created.Piece.Time?.ToString("HH:mm", CultureInfo.InvariantCulture),
         created.Piece.Format,
         created.Piece.DependsOn);
 }

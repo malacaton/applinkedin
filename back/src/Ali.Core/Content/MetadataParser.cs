@@ -16,8 +16,14 @@ internal static class MetadataParser
     public const string UrlField = "url";
     public const string DependsOnField = "depende_de";
     public const string FormatField = "formato";
+    public const string TimeField = "hora";
 
     private const string DateFormat = "yyyy-MM-dd";
+
+    /// <summary>
+    /// Accepted formats for 'hora'; it is always written as HH:mm.
+    /// </summary>
+    public static readonly string[] TimeFormats = ["HH:mm", "H:mm"];
 
     // The opening '---' line comes before the YAML text.
     private const int FrontMatterLineOffset = 1;
@@ -79,6 +85,7 @@ internal static class MetadataParser
             Url = fields.Text(UrlField),
             DependsOn = fields.TextList(DependsOnField),
             Format = fields.Text(FormatField),
+            Time = fields.Time(),
         };
     }
 
@@ -134,6 +141,27 @@ internal static class MetadataParser
                 CatalogWarningCode.InvalidStatus,
                 StatusField,
                 $"Estado '{value}' no válido. Valores admitidos: {string.Join(", ", PieceStatusNames.All)}."));
+            return null;
+        }
+
+        public TimeOnly? Time()
+        {
+            var value = Text(TimeField);
+            if (value is null)
+            {
+                return null;
+            }
+
+            if (TimeOnly.TryParseExact(value, TimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+            {
+                return time;
+            }
+
+            warnings.Add(new CatalogWarning(
+                path,
+                CatalogWarningCode.InvalidTime,
+                TimeField,
+                $"Hora '{value}' no válida en '{TimeField}'. Formato esperado: HH:mm."));
             return null;
         }
 

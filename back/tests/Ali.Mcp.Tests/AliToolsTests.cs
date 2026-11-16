@@ -99,6 +99,50 @@ public class AliToolsTests : IDisposable
         Assert.StartsWith("---\nserie: casos-reales\nestado: idea\nfecha_prevista: 2026-12-01\n", content.ReadText("casos/03-que-aprendimos-del-rag.md"));
     }
 
+    // ---------- HU-11: hora y renombrado ----------
+
+    [Fact]
+    public void ChangeStatus_Time_AppearsInChangesWithoutRename()
+    {
+        var result = Json(tools.ChangeStatus("casos/02-memoria", hora: "16:00"));
+
+        var change = Assert.Single(result.GetProperty("cambios").EnumerateArray());
+        Assert.Equal("hora", change.GetProperty("campo").GetString());
+        Assert.Equal("16:00", change.GetProperty("despues").GetString());
+        Assert.Empty(result.GetProperty("renombrado").EnumerateArray());
+        Assert.Equal(JsonValueKind.Null, result.GetProperty("aviso").ValueKind);
+        Assert.Contains("\"hora\": \"16:00\"", tools.ListPieces(serie: ["casos-reales"]));
+    }
+
+    [Fact]
+    public void CreateAndMove_WithDateInName_RenamesTheFile()
+    {
+        // The source file may use \r\n or \n; YAML accepts a mix.
+        File.WriteAllText(content.SeriesFile, McpTestContent.SeriesYaml.Replace(
+            "carpeta: casos",
+            "carpeta: casos\n    fichero: \"{nn} - {aammdd} - {titulo_original}\"",
+            StringComparison.Ordinal));
+
+        var created = Json(tools.CreatePiece("casos-reales", "¿Evaluar agentes?", fecha: "2026-12-01", hora: "16:00"));
+        Assert.Equal("casos/03 - 261201 - Evaluar agentes.md", created.GetProperty("fichero").GetString());
+        Assert.Equal("16:00", created.GetProperty("hora").GetString());
+
+        var moved = Json(tools.ChangeStatus("casos/03 - 261201 - Evaluar agentes", fecha_prevista: "2026-12-08"));
+
+        Assert.Equal("casos/03 - 261208 - Evaluar agentes.md", moved.GetProperty("fichero").GetString());
+        var renamed = Assert.Single(moved.GetProperty("renombrado").EnumerateArray());
+        Assert.Equal("casos/03 - 261201 - Evaluar agentes.md", renamed.GetProperty("antes").GetString());
+        Assert.True(File.Exists(Path.Combine(content.Root, "casos", "03 - 261208 - Evaluar agentes.md")));
+    }
+
+    [Fact]
+    public void InvalidTime_ThrowsMcpException()
+    {
+        Assert.Equal(
+            "Hora '25:00' no válida en hora. Formato esperado: HH:mm.",
+            Assert.Throws<McpException>(() => tools.ChangeStatus("casos/02-memoria", hora: "25:00")).Message);
+    }
+
     [Fact]
     public void CreatePiece_AfterSeries_AddsDependency()
     {

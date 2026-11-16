@@ -139,7 +139,7 @@ Por defecto revisa desde hoy hasta 28 días después. Los problemas de dependenc
 ali crear casos-reales "Qué aprendimos del RAG" --fecha-libre --formato articulo
 ```
 
-El fichero va a la `carpeta` de la serie (por defecto, su `id`) y se nombra según su plantilla `fichero` (por defecto, `{nn}-{titulo}`). La numeración sigue a la pieza de número más alto de la serie. `--fecha-libre` asigna la primera fecha libre; en series con `despues_de`, también añade la dependencia. Nunca sobrescribe un fichero existente.
+El fichero va a la `carpeta` de la serie (por defecto, su `id`) y se nombra según su plantilla `fichero` (por defecto, `{nn}-{titulo}`). La numeración sigue a la pieza de número más alto de la serie. `--fecha-libre` asigna la primera fecha libre; en series con `despues_de`, también añade la dependencia. Nunca sobrescribe un fichero existente. La plantilla admite convenciones propias, como `{nn} - Post {n} - {aammdd} - {titulo_original}` en la raíz. Si cambias la fecha de una pieza cuyo nombre la lleva, `ali estado` renombra el fichero y sus acompañantes sin borrar ni sobrescribir nada. Cada pieza puede llevar su `hora` de publicación (`--hora`).
 
 ## Servidor MCP
 

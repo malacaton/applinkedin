@@ -89,7 +89,7 @@ public class StatusCommandTests : IDisposable
     [InlineData(new[] { "casos/02-memoria", "--fecha-publicada", "2026-02-30" }, "Fecha '2026-02-30' no válida en --fecha-publicada. Formato esperado: AAAA-MM-DD u hoy.")]
     [InlineData(new[] { "casos/02-memoria", "--url", "linkedin.com/x" }, "URL 'linkedin.com/x' no válida: debe empezar por http:// o https://.")]
     [InlineData(new[] { "casos/02-memoria", "-e", "publicado" }, "Para marcar como publicado hace falta --fecha-publicada (la pieza no tiene fecha_publicada).")]
-    [InlineData(new[] { "casos/02-memoria" }, "Indica al menos un campo que cambiar: --estado, --fecha-prevista, --fecha-publicada o --url.")]
+    [InlineData(new[] { "casos/02-memoria" }, "Indica al menos un campo que cambiar: --estado, --fecha-prevista, --fecha-publicada, --url o --hora.")]
     [InlineData(new[] { "../fuera", "-e", "listo" }, "La pieza debe estar dentro de la carpeta de contenido.")]
     public void Status_InvalidRequest_FailsWithoutTouchingTheFile(string[] extra, string message)
     {

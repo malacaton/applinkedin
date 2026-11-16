@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Ali.Core.Content;
 using Ali.Core.Input;
+using Ali.Core.Scheduling;
 
 namespace Ali.Cli.Commands;
 
@@ -43,9 +44,20 @@ internal static class StatusCommand
             HelpName = "url",
         };
 
-        var command = new Command("estado", "Cambia el estado, las fechas o la URL de una pieza, tocando solo su bloque YAML.")
+        var time = new Option<string?>("--hora")
         {
-            piece, content, status, planned, published, url,
+            Description = "Hora de publicación (HH:mm).",
+            HelpName = "hora",
+        };
+        var seriesFile = new Option<string?>("--series")
+        {
+            Description = SeriesFile.Description + " Se usa para renombrar el fichero si cambia la fecha de su nombre.",
+            HelpName = "fichero",
+        };
+
+        var command = new Command("estado", "Cambia el estado, las fechas, la URL o la hora de una pieza, tocando solo su bloque YAML.")
+        {
+            piece, content, status, planned, published, url, time, seriesFile,
         };
 
         command.SetAction(result => Execute(
@@ -55,7 +67,9 @@ internal static class StatusCommand
             result.GetValue(status),
             result.GetValue(planned),
             result.GetValue(published),
-            result.GetValue(url)));
+            result.GetValue(url),
+            result.GetValue(time),
+            result.GetValue(seriesFile)));
 
         return command;
     }
@@ -67,7 +81,9 @@ internal static class StatusCommand
         string? statusValue,
         string? plannedValue,
         string? publishedValue,
-        string? urlValue)
+        string? urlValue,
+        string? timeValue,
+        string? seriesFileOption)
     {
         PieceStatus? status = null;
         if (statusValue is not null)
@@ -91,20 +107,32 @@ internal static class StatusCommand
             return context.Fail(DateInput.InvalidMessage(publishedValue, "--fecha-publicada"));
         }
 
+        if (!TimeInput.TryParse(timeValue, out var time))
+        {
+            return context.Fail(TimeInput.InvalidMessage(timeValue, "--hora"));
+        }
+
         var changes = new PieceChanges
         {
             Status = status,
             PlannedDate = plannedDate,
             PublishedDate = publishedDate,
             Url = urlValue?.Trim(),
+            Time = time,
         };
 
         PieceUpdateResult result;
         try
         {
-            result = new PieceUpdater().Update(context.ResolveContentFolder(contentOption), piecePath, changes);
+            var contentFolder = context.ResolveContentFolder(contentOption);
+            var config = changes.IsEmpty
+                ? null
+                : ContentLocation.LoadOptionalSeries(
+                    SeriesFile.Resolve(context, seriesFileOption, contentFolder),
+                    explicitlyGiven: !string.IsNullOrWhiteSpace(seriesFileOption));
+            result = new PieceUpdater().Update(contentFolder, piecePath, changes, config);
         }
-        catch (Exception ex) when (ex is PieceUpdateException or DirectoryNotFoundException)
+        catch (Exception ex) when (ex is PieceUpdateException or DirectoryNotFoundException or SeriesConfigException)
         {
             return context.Fail(ex.Message);
         }
@@ -115,10 +143,20 @@ internal static class StatusCommand
             return CliContext.Success;
         }
 
-        context.Output.WriteLine($"Actualizado {result.Path}:");
+        context.Output.WriteLine($"Actualizado {result.Before.Path}:");
         foreach (var change in result.Changes)
         {
             context.Output.WriteLine($"  {change.Field}: {change.OldValue ?? Missing} → {change.NewValue}");
+        }
+
+        foreach (var renamed in result.Renamed)
+        {
+            context.Output.WriteLine($"  renombrado: {renamed.Before} → {renamed.After}");
+        }
+
+        if (result.RenameWarning is { } warning)
+        {
+            context.Error.WriteLine($"aviso: {warning}");
         }
 
         return CliContext.Success;

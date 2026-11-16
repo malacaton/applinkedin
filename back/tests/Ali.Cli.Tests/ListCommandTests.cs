@@ -16,6 +16,7 @@ public class ListCommandTests : IDisposable
             fecha_prevista: 2026-11-09
             fecha_publicada: 2026-11-10
             url: https://www.linkedin.com/pulse/ejemplo
+            hora: "16:00"
             formato: articulo
             ---
             # Agentes
@@ -55,12 +56,12 @@ public class ListCommandTests : IDisposable
         Assert.Equal(0, result.ExitCode);
         Assert.Equal(
             [
-                "FECHA       ESTADO      SERIE         FICHERO",
-                "2026-11-10  publicado   casos-reales  casos/01-agentes.md",
-                "2026-11-17  programado  casos-reales  casos/02-memoria.md",
-                "2026-11-19  listo       resumen-caso  resumenes/01-agentes.md",
-                "—           —           —             borradores/sin-metadatos.md",
-                "—           idea        notas         notas/ideas-sueltas.md",
+                "FECHA       HORA   ESTADO      SERIE         FICHERO",
+                "2026-11-10  16:00  publicado   casos-reales  casos/01-agentes.md",
+                "2026-11-17  —      programado  casos-reales  casos/02-memoria.md",
+                "2026-11-19  —      listo       resumen-caso  resumenes/01-agentes.md",
+                "—           —      —           —             borradores/sin-metadatos.md",
+                "—           —      idea        notas         notas/ideas-sueltas.md",
                 "",
                 "5 piezas",
                 "",
@@ -137,6 +138,7 @@ public class ListCommandTests : IDisposable
         Assert.Equal("casos-reales", first.GetProperty("serie").GetString());
         Assert.Equal("publicado", first.GetProperty("estado").GetString());
         Assert.Equal("2026-11-10", first.GetProperty("fecha").GetString());
+        Assert.Equal("16:00", first.GetProperty("hora").GetString());
         Assert.Equal("2026-11-09", first.GetProperty("fecha_prevista").GetString());
         Assert.Equal("2026-11-10", first.GetProperty("fecha_publicada").GetString());
         Assert.Equal("https://www.linkedin.com/pulse/ejemplo", first.GetProperty("url").GetString());
@@ -146,6 +148,7 @@ public class ListCommandTests : IDisposable
         var second = pieces[1];
         Assert.Equal(JsonValueKind.Null, second.GetProperty("fecha_publicada").ValueKind);
         Assert.Equal(JsonValueKind.Null, second.GetProperty("url").ValueKind);
+        Assert.Equal(JsonValueKind.Null, second.GetProperty("hora").ValueKind);
 
         Assert.Equal(["casos/01-agentes"], pieces[2].GetProperty("depende_de").EnumerateArray().Select(d => d.GetString()));
 
