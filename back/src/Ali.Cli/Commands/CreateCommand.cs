@@ -58,9 +58,15 @@ internal static class CreateCommand
             HelpName = "pieza",
         };
 
+        var time = new Option<string?>("--hora")
+        {
+            Description = "Hora de publicación (HH:mm). Por defecto, la de la cadencia de la serie.",
+            HelpName = "hora",
+        };
+
         var command = new Command("crear", "Crea el fichero de una pieza nueva con el nombre y el bloque YAML de su serie.")
         {
-            series, title, content, seriesFile, date, firstFree, from, format, dependsOn,
+            series, title, content, seriesFile, date, firstFree, from, format, dependsOn, time,
         };
 
         command.SetAction(result => Execute(
@@ -73,7 +79,8 @@ internal static class CreateCommand
             result.GetValue(firstFree),
             result.GetValue(from),
             result.GetValue(format),
-            result.GetValue(dependsOn) ?? []));
+            result.GetValue(dependsOn) ?? [],
+            result.GetValue(time)));
 
         return command;
     }
@@ -88,8 +95,14 @@ internal static class CreateCommand
         bool firstFree,
         string? fromValue,
         string? format,
-        string[] dependsOn)
+        string[] dependsOn,
+        string? timeValue)
     {
+        if (!TimeInput.TryParse(timeValue, out var time))
+        {
+            return context.Fail(TimeInput.InvalidMessage(timeValue, "--hora"));
+        }
+
         if (!DateInput.TryParse(dateValue, context.Today(), out var plannedDate))
         {
             return context.Fail(DateInput.InvalidMessage(dateValue, "--fecha"));
@@ -116,6 +129,7 @@ internal static class CreateCommand
                 SearchFrom = from ?? context.Today(),
                 Format = format,
                 DependsOn = dependsOn,
+                Time = time,
             });
         }
         catch (Exception ex) when (ex is DirectoryNotFoundException or SeriesConfigException or PieceCreationException)
@@ -130,6 +144,11 @@ internal static class CreateCommand
         if (piece.PlannedDate is { } planned)
         {
             context.Output.WriteLine($"  fecha_prevista: {planned.ToString(DateFormat, CultureInfo.InvariantCulture)}");
+        }
+
+        if (piece.Time is { } pieceTime)
+        {
+            context.Output.WriteLine($"  hora: {pieceTime.ToString("HH:mm", CultureInfo.InvariantCulture)}");
         }
 
         if (piece.Format is not null)

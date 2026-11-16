@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Ali.Core.Scheduling;
 
 namespace Ali.Core.Content;
 
@@ -28,8 +29,12 @@ public sealed class PieceUpdater
     /// </summary>
     /// <exception cref="ArgumentException">The root path is null, empty or blank.</exception>
     /// <exception cref="DirectoryNotFoundException">The content folder does not exist.</exception>
+    /// <param name="config">
+    /// Series configuration. When given and the date in the file name changes (HU-11), the file and its companions
+    /// are renamed; nothing is ever deleted or overwritten.
+    /// </param>
     /// <exception cref="PieceUpdateException">A validation rule failed; the file has not been modified.</exception>
-    public PieceUpdateResult Update(string rootPath, string piecePath, PieceChanges changes)
+    public PieceUpdateResult Update(string rootPath, string piecePath, PieceChanges changes, SeriesConfig? config = null)
     {
         ArgumentNullException.ThrowIfNull(changes);
         if (string.IsNullOrWhiteSpace(rootPath))
@@ -46,7 +51,7 @@ public sealed class PieceUpdater
         if (changes.IsEmpty)
         {
             throw new PieceUpdateException(
-                "Indica al menos un campo que cambiar: --estado, --fecha-prevista, --fecha-publicada o --url.");
+                "Indica al menos un campo que cambiar: --estado, --fecha-prevista, --fecha-publicada, --url o --hora.");
         }
 
         if (changes.Url is { } url && !IsValidUrl(url))
@@ -78,6 +83,7 @@ public sealed class PieceUpdater
             PlannedDate = changes.PlannedDate ?? before.PlannedDate,
             PublishedDate = changes.PublishedDate ?? before.PublishedDate,
             Url = changes.Url ?? before.Url,
+            Time = changes.Time ?? before.Time,
             HasFrontMatter = true,
         };
 
@@ -86,7 +92,91 @@ public sealed class PieceUpdater
 
         Write(relative, fullPath, original, updated);
 
-        return new PieceUpdateResult(relative, before, after, fieldChanges);
+        var result = new PieceUpdateResult(relative, before, after, fieldChanges);
+        return config is null ? result : RenameForDate(relative, fullPath, config, result);
+    }
+
+    /// <summary>
+    /// Renames the piece and its companion files (same folder, same name prefix up to the date, not .md)
+    /// when the date that names the file has changed. Never overwrites: if any new name exists, nothing is renamed.
+    /// </summary>
+    private static PieceUpdateResult RenameForDate(string relative, string fullPath, SeriesConfig config, PieceUpdateResult result)
+    {
+        var oldDate = result.Before.PublishedDate ?? result.Before.PlannedDate;
+        var newDate = result.After.PublishedDate ?? result.After.PlannedDate;
+        if (newDate is not { } date
+            || oldDate == newDate
+            || result.After.Series is not { } seriesId
+            || config.Find(seriesId) is not { } series)
+        {
+            return result;
+        }
+
+        var directory = Path.GetDirectoryName(fullPath)!;
+        var fileName = Path.GetFileName(fullPath);
+        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var template = series.ResolvedFileName;
+        if (!template.TryMatch(baseName, out var match) || match!.DateEnd < 0
+            || template.ReplaceDate(baseName, date) is not { } newBaseName
+            || newBaseName == baseName)
+        {
+            return result;
+        }
+
+        // Date formats have a fixed length, so the prefix ends at the same position in both names.
+        var oldPrefix = baseName[..match.DateEnd];
+        var newPrefix = newBaseName[..match.DateEnd];
+
+        var moves = new List<(string From, string To)> { (fileName, newBaseName + Path.GetExtension(fileName)) };
+        moves.AddRange(Directory.EnumerateFiles(directory)
+            .Select(Path.GetFileName)
+            .Where(name => name != fileName
+                && name!.StartsWith(oldPrefix, StringComparison.Ordinal)
+                && !name.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase))
+            .Order(StringComparer.Ordinal)
+            .Select(name => (name!, newPrefix + name![oldPrefix.Length..])));
+
+        var folder = relative.Contains('/') ? relative[..(relative.LastIndexOf('/') + 1)] : string.Empty;
+        var taken = moves.FirstOrDefault(m => File.Exists(Path.Combine(directory, m.To)) || Directory.Exists(Path.Combine(directory, m.To)));
+        if (taken.To is not null)
+        {
+            return result with { RenameWarning = $"No se renombra: ya existe '{folder}{taken.To}'." };
+        }
+
+        var done = new List<(string From, string To)>();
+        try
+        {
+            foreach (var move in moves)
+            {
+                File.Move(Path.Combine(directory, move.From), Path.Combine(directory, move.To), overwrite: false);
+                done.Add(move);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Put back what was already renamed, so the piece and its companions keep matching names.
+            foreach (var move in Enumerable.Reverse(done))
+            {
+                try
+                {
+                    File.Move(Path.Combine(directory, move.To), Path.Combine(directory, move.From), overwrite: false);
+                }
+                catch (Exception undo) when (undo is IOException or UnauthorizedAccessException)
+                {
+                    // Best effort: the warning below tells the user to check the names.
+                }
+            }
+
+            return result with { RenameWarning = $"No se pudo renombrar '{relative}': {ex.Message}" };
+        }
+
+        var newRelative = folder + moves[0].To;
+        return result with
+        {
+            Path = newRelative,
+            After = result.After with { Path = newRelative },
+            Renamed = moves.Select(m => new RenamedFile(folder + m.From, folder + m.To)).ToList(),
+        };
     }
 
     private static bool IsValidUrl(string url) =>
@@ -225,8 +315,24 @@ public sealed class PieceUpdater
             result.Add(new FieldChange(MetadataParser.UrlField, before.Url, url));
         }
 
+        if (changes.Time is { } time && before.Time != time)
+        {
+            result.Add(new FieldChange(MetadataParser.TimeField, FormatTime(before.Time), FormatTime(time)!));
+        }
+
         return result;
     }
+
+    private static string? FormatTime(TimeOnly? time) =>
+        time?.ToString("HH:mm", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Front matter line for a change. 'hora' is quoted so YAML always reads it as text.
+    /// </summary>
+    private static string YamlLine(FieldChange change) =>
+        change.Field == MetadataParser.TimeField
+            ? $"{change.Field}: \"{change.NewValue}\""
+            : $"{change.Field}: {change.NewValue}";
 
     private static string? FormatDate(DateOnly? date) =>
         date?.ToString(DateFormat, CultureInfo.InvariantCulture);
@@ -260,6 +366,7 @@ public sealed class PieceUpdater
         && a.PlannedDate == b.PlannedDate
         && a.PublishedDate == b.PublishedDate
         && a.Url == b.Url
+        && a.Time == b.Time
         && a.Format == b.Format
         && a.DependsOn.SequenceEqual(b.DependsOn);
 
@@ -373,7 +480,7 @@ public sealed class PieceUpdater
                 var index = lines.FindIndex(l => IsKeyLine(l.Text, change.Field));
                 if (index < 0)
                 {
-                    lines.Add(Line.Create($"{change.Field}: {change.NewValue}", newLine));
+                    lines.Add(Line.Create(YamlLine(change), newLine));
                     continue;
                 }
 
@@ -383,7 +490,7 @@ public sealed class PieceUpdater
                     end++;
                 }
 
-                var replacement = Line.Create($"{change.Field}: {change.NewValue}", lines[index].Terminator);
+                var replacement = Line.Create(YamlLine(change), lines[index].Terminator);
                 lines.RemoveRange(index, end - index);
                 lines.Insert(index, replacement);
             }

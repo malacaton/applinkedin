@@ -51,6 +51,7 @@ formato: articulo
 | `url` | Enlace a la pieza publicada |
 | `depende_de` | Ruta de otra pieza (con o sin `.md`), o una lista de rutas |
 | `formato` | Texto libre: `articulo`, `post`, `carrusel`... |
+| `hora` | Hora de publicación, `HH:mm` (por ejemplo, `"08:00"` o `"16:00"`). Sirve para comparar resultados entre horarios |
 
 **Cómo se leen tus ficheros:**
 
@@ -97,9 +98,38 @@ series:
 
 | Marcador | Significado |
 | --- | --- |
-| `{n}`, `{nn}`, `{nnn}` | Número de orden, sin relleno o con relleno a 2 o 3 cifras |
-| `{titulo}` | El título en minúsculas, sin tildes y con guiones. Es obligatorio |
-| `{fecha}` | La fecha prevista |
+| `{n}`, `{nn}`, `{nnn}` | Número de orden, sin relleno o con relleno a 2 o 3 cifras. Puede aparecer varias veces |
+| `{titulo}` | El título en minúsculas, sin tildes y con guiones |
+| `{titulo_original}` | El título tal cual, sin `¿ ¡ ? : * " < > \| / \` |
+| `{fecha}` / `{aammdd}` | La fecha prevista, como `2026-11-24` o como `261124` |
+
+Hace falta `{titulo}` o `{titulo_original}`.
+
+**Tu propia convención de nombres.** Por ejemplo, para piezas en la raíz llamadas `15 - Post 15 - 261124 - Título.md` y para posts de jueves que llevan el número del post del que dependen:
+
+```yaml
+  - id: principal
+    nombre: Serie principal
+    carpeta: "."                 # la raíz de la carpeta de contenido
+    fichero: "{nn} - Post {n} - {aammdd} - {titulo_original}"
+    cadencia: { dias: martes, frecuencia: semanal, hora: "08:00" }
+
+  - id: jueves
+    nombre: Posts de jueves
+    carpeta: "."
+    fichero: "{nn} - Post {n}j - {aammdd} - {titulo_original}"
+    numeracion: dependencia      # el número de la pieza de la que depende
+    cadencia: { dias: jueves, frecuencia: quincenal, desde: 2026-10-08 }
+```
+
+**Numeración:**
+
+- **Número de las piezas existentes:** se lee de sus nombres con la plantilla de su serie; por ejemplo, `EXTRA 07 - …` cuenta como 7. Si un nombre no encaja con la plantilla, se usan sus cifras iniciales.
+- **`numeracion`:**
+  - `secuencial` (por defecto): la pieza nueva lleva el número más alto de la serie más uno.
+  - `dependencia`: lleva el número de la primera pieza de `depende_de`.
+
+**Hora al crear:** si no indicas `--hora`, la pieza nueva lleva la `hora` de la cadencia de su serie, si la tiene.
 
 **Otras reglas:**
 
@@ -207,14 +237,14 @@ Indica la carpeta con `-c <carpeta>` o con la variable `ALI_CONTENIDO`. Si no in
 **Listar piezas** (`ali listar`, con filtros `-s`, `-e`, `--sin-clasificar`, `--desde`, `--hasta` y `--json`):
 
 ```
-FECHA       ESTADO      SERIE         FICHERO
-2026-11-10  publicado   casos-reales  casos/01-agentes-en-produccion.md
-2026-11-16  listo       fundamentos   fundamentos/01-que-es-un-token.md
-2026-11-17  programado  casos-reales  casos/02-memoria-de-los-agentes.md
-—           borrador    casos-reales  casos/03-evaluar-un-rag.md
-—           idea        —             notas/ideas-sueltas.md
-—           idea        resumen-caso  resumenes/01-agentes-en-produccion.md
-—           idea        resumen-caso  resumenes/03-evaluar-un-rag.md
+FECHA       HORA   ESTADO      SERIE         FICHERO
+2026-11-10  09:00  publicado   casos-reales  casos/01-agentes-en-produccion.md
+2026-11-16  08:30  listo       fundamentos   fundamentos/01-que-es-un-token.md
+2026-11-17  16:00  programado  casos-reales  casos/02-memoria-de-los-agentes.md
+—           —      borrador    casos-reales  casos/03-evaluar-un-rag.md
+—           —      idea        —             notas/ideas-sueltas.md
+—           —      idea        resumen-caso  resumenes/01-agentes-en-produccion.md
+—           —      idea        resumen-caso  resumenes/03-evaluar-un-rag.md
 
 7 piezas
 ```
@@ -222,9 +252,9 @@ FECHA       ESTADO      SERIE         FICHERO
 `ali listar -e programado -e listo`:
 
 ```
-FECHA       ESTADO      SERIE         FICHERO
-2026-11-16  listo       fundamentos   fundamentos/01-que-es-un-token.md
-2026-11-17  programado  casos-reales  casos/02-memoria-de-los-agentes.md
+FECHA       HORA   ESTADO      SERIE         FICHERO
+2026-11-16  08:30  listo       fundamentos   fundamentos/01-que-es-un-token.md
+2026-11-17  16:00  programado  casos-reales  casos/02-memoria-de-los-agentes.md
 
 2 piezas
 ```
@@ -279,7 +309,7 @@ FECHA       TIPO       SERIE         PIEZAS                                     
 | `dependencia_rota` | `depende_de` apunta a algo que no existe |
 | `serie_desconocida` | La `serie` de la pieza no está en el fichero de series |
 
-**Crear una pieza** (`ali crear <serie> "<título>"`, con `--fecha`, `--fecha-libre`, `--desde`, `--formato` y `--depende-de`).
+**Crear una pieza** (`ali crear <serie> "<título>"`, con `--fecha`, `--fecha-libre`, `--desde`, `--formato`, `--depende-de` y `--hora`).
 
 `ali crear casos-reales "Evaluar agentes con trazas" --fecha-libre --desde 2026-11-15`:
 
@@ -288,9 +318,10 @@ Creada casos/04-evaluar-agentes-con-trazas.md
   serie: casos-reales
   estado: idea
   fecha_prevista: 2026-11-24
+  hora: 09:00
 ```
 
-**Cambiar el estado** (`ali estado <fichero>`, con `-e`, `--fecha-prevista`, `--fecha-publicada` y `--url`). Las fechas admiten `hoy`.
+**Cambiar el estado** (`ali estado <fichero>`, con `-e`, `--fecha-prevista`, `--fecha-publicada`, `--url` y `--hora`). Las fechas admiten `hoy`.
 
 `ali estado casos/02-memoria-de-los-agentes -e publicado --fecha-publicada 2026-11-17 --url https://www.linkedin.com/pulse/ejemplo-memoria`:
 
@@ -300,6 +331,13 @@ Actualizado casos/02-memoria-de-los-agentes.md:
   fecha_publicada: — → 2026-11-17
   url: — → https://www.linkedin.com/pulse/ejemplo-memoria
 ```
+
+**Renombrar al cambiar la fecha.** Esto ocurre cuando la plantilla de la serie lleva la fecha (`{aammdd}` o `{fecha}`) y cambias la fecha que da nombre al fichero: `fecha_publicada` si la tiene y, si no, `fecha_prevista`.
+
+- **Qué se renombra:** el fichero y sus acompañantes. Son los ficheros que no son `.md`, están en la misma carpeta y empiezan igual hasta la fecha, como la imagen `.png` o el `.txt` de «TIENE IMAGEN». Cada uno aparece en la salida como `renombrado: antes → después`.
+- **Si algún nombre nuevo ya existe:** no se renombra nada y se avisa. El cambio de fecha sí se guarda.
+- **Lo que nunca hace:** borrar ni sobrescribir ficheros.
+- **Referencias:** las referencias al nombre antiguo que haya en otros ficheros no se actualizan.
 
 ## 9. Problemas frecuentes
 

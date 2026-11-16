@@ -10,7 +10,7 @@ internal static class TextListWriter
     private const string Missing = "—";
     private const string ColumnGap = "  ";
 
-    private static readonly string[] Headers = ["FECHA", "ESTADO", "SERIE", "FICHERO"];
+    private static readonly string[] Headers = ["FECHA", "HORA", "ESTADO", "SERIE", "FICHERO"];
 
     public static void Write(TextWriter output, IReadOnlyList<Piece> pieces)
     {
@@ -24,6 +24,7 @@ internal static class TextListWriter
             .Select(p => new[]
             {
                 p.EffectiveDate?.ToString("yyyy-MM-dd") ?? Missing,
+                p.Time?.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture) ?? Missing,
                 p.Status is { } status ? PieceStatusNames.ToName(status) : Missing,
                 p.Series ?? Missing,
                 p.Path,

@@ -29,6 +29,11 @@ public sealed record NewPiece
     public string? Format { get; init; }
 
     public IReadOnlyList<string> DependsOn { get; init; } = [];
+
+    /// <summary>
+    /// 'hora'. When null, the time of the series cadence, if any.
+    /// </summary>
+    public TimeOnly? Time { get; init; }
 }
 
 /// <param name="Path">Path of the new file, relative to the content root, using '/'.</param>
@@ -119,19 +124,26 @@ public sealed partial class PieceCreator
         var template = series.ResolvedFileName;
         if (template.UsesDate && date is null)
         {
+            var token = template.Text.Contains("{" + FileNameTemplate.ShortDateToken + "}", StringComparison.Ordinal)
+                ? FileNameTemplate.ShortDateToken
+                : FileNameTemplate.DateToken;
             throw new PieceCreationException(
-                $"La serie '{series.Id}' usa {{fecha}} en el nombre: indica --fecha o --fecha-libre.");
+                $"La serie '{series.Id}' usa {{{token}}} en el nombre: indica --fecha o --fecha-libre.");
         }
 
         var dependsOn = DependsOn(request.DependsOn, slot);
         var format = string.IsNullOrWhiteSpace(request.Format) ? null : request.Format.Trim();
+        var time = request.Time ?? series.Cadence?.Time;
 
-        var number = NextNumber(series, ordered);
-        var relative = $"{series.ResolvedFolder}/{template.Resolve(number, slug, date)}{MarkdownExtension}";
+        var number = series.Numbering == SeriesNumbering.Dependency
+            ? DependencyNumber(series, config, ordered, dependsOn)
+            : NextNumber(series, ordered);
+        var fileName = template.Resolve(new FileNameValues(number, slug, TitleSlug.Original(title), date)) + MarkdownExtension;
+        var relative = series.ResolvedFolder == Series.RootFolder ? fileName : $"{series.ResolvedFolder}/{fileName}";
         var fullPath = ResolveInside(root, relative);
 
-        var content = BuildContent(series.Id, date, format, dependsOn, title);
-        var piece = Verify(relative, content, series.Id, date, format, dependsOn);
+        var content = BuildContent(series.Id, date, time, format, dependsOn, title);
+        var piece = Verify(relative, content, series.Id, date, time, format, dependsOn);
 
         Write(relative, fullPath, content);
         return new CreatedPiece(relative, piece, slot);
@@ -185,22 +197,55 @@ public sealed partial class PieceCreator
     }
 
     /// <summary>
-    /// Highest leading number among the file names of the series, plus one; 1 when there is none.
+    /// Highest number of the series, plus one; 1 when there is none.
     /// </summary>
-    private static int NextNumber(Series series, List<Piece> pieces)
+    private static int NextNumber(Series series, List<Piece> pieces) =>
+        pieces
+            .Where(p => p.Series == series.Id)
+            .Select(p => ReadNumber(p, series))
+            .Where(n => n is not null)
+            .Select(n => n!.Value)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+
+    /// <summary>
+    /// Number of the first piece this one depends on (series with 'numeracion: dependencia').
+    /// </summary>
+    private static int DependencyNumber(Series series, SeriesConfig config, List<Piece> pieces, List<string> dependsOn)
     {
-        var highest = 0;
-        foreach (var piece in pieces.Where(p => p.Series == series.Id))
+        if (dependsOn.Count == 0)
         {
-            var name = piece.Path[(piece.Path.LastIndexOf('/') + 1)..];
-            var digits = name.TakeWhile(char.IsAsciiDigit).Take(MaxNumberDigits).ToArray();
-            if (digits.Length > 0)
-            {
-                highest = Math.Max(highest, int.Parse(digits, CultureInfo.InvariantCulture));
-            }
+            throw new PieceCreationException($"La serie '{series.Id}' numera por dependencia: indica --depende-de.");
         }
 
-        return highest + 1;
+        var reference = PieceReference.Normalize(dependsOn[0]);
+        var dependency = pieces.FirstOrDefault(
+            p => string.Equals(PieceReference.Normalize(p.Path), reference, StringComparison.OrdinalIgnoreCase));
+        var dependencySeries = dependency?.Series is { } id ? config.Find(id) : null;
+
+        return (dependency is null ? null : ReadNumber(dependency, dependencySeries))
+            ?? throw new PieceCreationException(
+                $"No se puede leer el número de '{dependsOn[0]}', de la que depende la pieza.");
+    }
+
+    /// <summary>
+    /// Number of an existing piece: read with the template of its series or, when the name does not fit, its leading digits.
+    /// </summary>
+    internal static int? ReadNumber(Piece piece, Series? series)
+    {
+        var name = piece.Path[(piece.Path.LastIndexOf('/') + 1)..];
+        if (name.EndsWith(MarkdownExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            name = name[..^MarkdownExtension.Length];
+        }
+
+        if (series?.ResolvedFileName.TryMatch(name, out var match) == true && match!.Number is { } number)
+        {
+            return number;
+        }
+
+        var digits = name.TakeWhile(char.IsAsciiDigit).Take(MaxNumberDigits).ToArray();
+        return digits.Length > 0 ? int.Parse(digits, CultureInfo.InvariantCulture) : null;
     }
 
     private static string ResolveInside(DirectoryInfo root, string relative)
@@ -217,7 +262,7 @@ public sealed partial class PieceCreator
         return fullPath;
     }
 
-    private static string BuildContent(string seriesId, DateOnly? date, string? format, List<string> dependsOn, string title)
+    private static string BuildContent(string seriesId, DateOnly? date, TimeOnly? time, string? format, List<string> dependsOn, string title)
     {
         var builder = new StringBuilder();
         builder.Append("---\n");
@@ -226,6 +271,11 @@ public sealed partial class PieceCreator
         if (date is { } d)
         {
             builder.Append($"{MetadataParser.PlannedDateField}: {d.ToString(DateFormat, CultureInfo.InvariantCulture)}\n");
+        }
+
+        if (time is { } t)
+        {
+            builder.Append($"{MetadataParser.TimeField}: \"{t.ToString("HH:mm", CultureInfo.InvariantCulture)}\"\n");
         }
 
         if (format is not null)
@@ -265,7 +315,14 @@ public sealed partial class PieceCreator
     /// <summary>
     /// Safety net: the content must read back, with the catalog reader, as exactly the requested metadata.
     /// </summary>
-    private static Piece Verify(string relative, string content, string seriesId, DateOnly? date, string? format, List<string> dependsOn)
+    private static Piece Verify(
+        string relative,
+        string content,
+        string seriesId,
+        DateOnly? date,
+        TimeOnly? time,
+        string? format,
+        List<string> dependsOn)
     {
         var frontMatter = FrontMatterReader.Read(new StringReader(content));
         var warnings = new List<CatalogWarning>();
@@ -278,6 +335,7 @@ public sealed partial class PieceCreator
             || piece.Series != seriesId
             || piece.Status != PieceStatus.Idea
             || piece.PlannedDate != date
+            || piece.Time != time
             || piece.Format != format
             || !piece.DependsOn.SequenceEqual(dependsOn))
         {

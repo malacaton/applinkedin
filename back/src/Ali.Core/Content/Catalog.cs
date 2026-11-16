@@ -21,6 +21,7 @@ public enum CatalogWarningCode
     FrontMatterNotMapping,
     InvalidStatus,
     InvalidDate,
+    InvalidTime,
     InvalidFieldType,
     FileUnreadable,
 }

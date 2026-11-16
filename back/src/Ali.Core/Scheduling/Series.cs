@@ -9,17 +9,43 @@ namespace Ali.Core.Scheduling;
 /// <param name="After">Link to another series whose pieces this one follows; null if none.</param>
 /// <param name="Folder">Folder for new pieces, relative to the content root with '/'; null means <paramref name="Id"/>.</param>
 /// <param name="FileName">File name pattern for new pieces; null means <see cref="FileNameTemplate.Default"/>.</param>
+/// <param name="Numbering">How new pieces get their number.</param>
 public sealed record Series(
     string Id,
     string Name,
     Cadence? Cadence,
     SeriesLink? After,
     string? Folder = null,
-    FileNameTemplate? FileName = null)
+    FileNameTemplate? FileName = null,
+    SeriesNumbering Numbering = SeriesNumbering.Sequential)
 {
+    /// <summary>
+    /// Value of <see cref="Folder"/> that means the root of the content folder.
+    /// </summary>
+    public const string RootFolder = ".";
+
+    /// <summary>
+    /// Folder for new pieces: <see cref="RootFolder"/> or a relative path with '/'.
+    /// </summary>
     public string ResolvedFolder => Folder ?? Id;
 
     public FileNameTemplate ResolvedFileName => FileName ?? FileNameTemplate.Default;
+}
+
+/// <summary>
+/// How a new piece of a series gets its number.
+/// </summary>
+public enum SeriesNumbering
+{
+    /// <summary>
+    /// Highest number of the series plus one.
+    /// </summary>
+    Sequential,
+
+    /// <summary>
+    /// Same number as the first piece it depends on.
+    /// </summary>
+    Dependency,
 }
 
 /// <summary>

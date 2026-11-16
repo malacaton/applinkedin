@@ -13,7 +13,9 @@ public sealed record PieceChanges
 
     public string? Url { get; init; }
 
-    public bool IsEmpty => Status is null && PlannedDate is null && PublishedDate is null && Url is null;
+    public TimeOnly? Time { get; init; }
+
+    public bool IsEmpty => Status is null && PlannedDate is null && PublishedDate is null && Url is null && Time is null;
 }
 
 /// <summary>
@@ -31,7 +33,22 @@ public sealed record FieldChange(string Field, string? OldValue, string NewValue
 public sealed record PieceUpdateResult(string Path, Piece Before, Piece After, IReadOnlyList<FieldChange> Changes)
 {
     public bool HasChanges => Changes.Count > 0;
+
+    /// <summary>
+    /// Files renamed because the date in their name changed (the piece first, then its companions).
+    /// </summary>
+    public IReadOnlyList<RenamedFile> Renamed { get; init; } = [];
+
+    /// <summary>
+    /// Why the files were not renamed although the date in their name changed; null when not needed or done.
+    /// </summary>
+    public string? RenameWarning { get; init; }
 }
+
+/// <summary>
+/// A file renamed by an update. Both paths are relative to the content root, using '/'.
+/// </summary>
+public sealed record RenamedFile(string Before, string After);
 
 /// <summary>
 /// The update was rejected. The file has not been modified.

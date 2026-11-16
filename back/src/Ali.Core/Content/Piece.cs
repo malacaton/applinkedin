@@ -21,6 +21,11 @@ public sealed record Piece
     public string? Url { get; init; }
 
     /// <summary>
+    /// Publication time ('hora'), local.
+    /// </summary>
+    public TimeOnly? Time { get; init; }
+
+    /// <summary>
     /// Relative paths of the pieces this one depends on (with or without the .md extension).
     /// </summary>
     public IReadOnlyList<string> DependsOn { get; init; } = [];

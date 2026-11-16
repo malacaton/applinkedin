@@ -23,11 +23,12 @@ public sealed partial class SeriesConfigLoader
     private const string LinkSeriesKey = "serie";
     private const string FolderKey = "carpeta";
     private const string FileNameKey = "fichero";
+    private const string NumberingKey = "numeracion";
 
     private const int MinLinkDays = 1;
     private const int MaxLinkDays = 60;
 
-    private static readonly string[] SeriesKeys = [IdKey, NameKey, CadenceKey, AfterKey, FolderKey, FileNameKey];
+    private static readonly string[] SeriesKeys = [IdKey, NameKey, CadenceKey, AfterKey, FolderKey, FileNameKey, NumberingKey];
     private static readonly string[] CadenceKeys = [DaysKey, FrequencyKey, AnchorKey, TimeKey];
     private static readonly string[] LinkKeys = [LinkSeriesKey, DaysKey];
     private static readonly string[] TimeFormats = ["HH:mm", "H:mm"];
@@ -90,7 +91,7 @@ public sealed partial class SeriesConfigLoader
             throw new SeriesConfigException(fullPath, errors);
         }
 
-        return new SeriesConfig(drafts.Select(d => new Series(d.Id!, d.Name!, d.Cadence, d.After, d.Folder, d.FileName)).ToList());
+        return new SeriesConfig(drafts.Select(d => new Series(d.Id!, d.Name!, d.Cadence, d.After, d.Folder, d.FileName, d.Numbering)).ToList());
     }
 
     private static SeriesConfigException Fail(string path, string reason) =>
@@ -174,6 +175,7 @@ public sealed partial class SeriesConfigLoader
         draft.After = ReadLink(mapping, label, errors);
         draft.Folder = ReadFolder(mapping, label, errors);
         draft.FileName = ReadFileName(mapping, label, errors);
+        draft.Numbering = ReadNumbering(mapping, label, errors);
         return draft;
     }
 
@@ -183,6 +185,11 @@ public sealed partial class SeriesConfigLoader
         if (value is null)
         {
             return null;
+        }
+
+        if (value.Trim() == Series.RootFolder)
+        {
+            return Series.RootFolder;
         }
 
         var segments = value.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -197,6 +204,21 @@ public sealed partial class SeriesConfigLoader
         }
 
         return string.Join('/', segments);
+    }
+
+    private static SeriesNumbering ReadNumbering(YamlMappingNode series, string label, List<SeriesConfigError> errors)
+    {
+        var value = ReadText(series, NumberingKey, label, errors);
+        switch (value?.ToLowerInvariant())
+        {
+            case null or "secuencial":
+                return SeriesNumbering.Sequential;
+            case "dependencia":
+                return SeriesNumbering.Dependency;
+            default:
+                errors.Add(new SeriesConfigError(label, NumberingKey, $"'{value}' no es válida; usa secuencial o dependencia."));
+                return SeriesNumbering.Sequential;
+        }
     }
 
     private static FileNameTemplate? ReadFileName(YamlMappingNode series, string label, List<SeriesConfigError> errors)
@@ -568,6 +590,8 @@ public sealed partial class SeriesConfigLoader
         public string? Folder { get; set; }
 
         public FileNameTemplate? FileName { get; set; }
+
+        public SeriesNumbering Numbering { get; set; }
 
         public static string LabelFor(string id) => $"Serie '{id}'";
     }

@@ -63,9 +63,9 @@ public class SeriesNamingTests : IDisposable
     }
 
     [Theory]
-    [InlineData("{nn}", "debe incluir {titulo}.")]
-    [InlineData("{numero}-{titulo}", "marcador '{numero}' desconocido; usa {n}, {nn}, {nnn}, {titulo} o {fecha}.")]
-    [InlineData("{nn-{titulo}", "marcador '{nn-{titulo}' desconocido; usa {n}, {nn}, {nnn}, {titulo} o {fecha}.")]
+    [InlineData("{nn}", "debe incluir {titulo} o {titulo_original}.")]
+    [InlineData("{numero}-{titulo}", "marcador '{numero}' desconocido; usa {n}, {nn}, {nnn}, {titulo}, {titulo_original}, {fecha} o {aammdd}.")]
+    [InlineData("{nn-{titulo}", "marcador '{nn-{titulo}' desconocido; usa {n}, {nn}, {nnn}, {titulo}, {titulo_original}, {fecha} o {aammdd}.")]
     [InlineData("{titulo", "tiene una '{' sin cerrar.")]
     [InlineData("titulo}{titulo}", "tiene una '}' sin su '{'.")]
     [InlineData("sub/{titulo}", "solo puede contener el nombre del fichero, sin carpetas ni caracteres reservados.")]

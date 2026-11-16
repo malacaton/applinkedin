@@ -2,6 +2,7 @@
 serie: fundamentos
 estado: listo
 fecha_prevista: 2026-11-16
+hora: "08:30"
 formato: post
 ---
 # Qué es un token

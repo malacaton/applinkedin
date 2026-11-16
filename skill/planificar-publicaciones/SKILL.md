@@ -21,8 +21,8 @@ Estados de una pieza, en orden: `idea` → `borrador` → `listo` → `programad
 | `listar_piezas` | Saber qué hay antes de proponer nada. Admite filtros por `serie`, `estado` y fechas (`desde`, `hasta`), y `sin_clasificar` |
 | `buscar_huecos` | Proponer fechas para una `serie`. Devuelve las próximas fechas libres según su regla |
 | `validar_calendario` | Revisar el plan antes y después de cambiarlo: choques, huecos, piezas bloqueadas y dependencias rotas |
-| `cambiar_estado` | Registrar avances: `estado`, `fecha_prevista`, `fecha_publicada` y `url` de una pieza (`fichero`) |
-| `crear_pieza` | Crear el fichero de una idea nueva en su `serie`, con su `titulo`. Con `fecha_libre`, le asigna la primera fecha libre |
+| `cambiar_estado` | Registrar avances: `estado`, `fecha_prevista`, `fecha_publicada`, `url` y `hora` de una pieza (`fichero`). Si la fecha forma parte del nombre del fichero, lo renombra |
+| `crear_pieza` | Crear el fichero de una idea nueva en su `serie`, con su `titulo`. Con `fecha_libre`, le asigna la primera fecha libre; con `hora`, su hora de publicación |
 
 Las fechas se escriben `AAAA-MM-DD` o `hoy`.
 

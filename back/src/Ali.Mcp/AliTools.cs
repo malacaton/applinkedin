@@ -99,7 +99,8 @@ public sealed class AliTools(ServerSettings settings, TimeProvider clock)
         [Description("Nuevo estado: idea, borrador, listo, programado o publicado.")] string? estado = null,
         [Description("Nueva fecha prevista. " + DateHelp)] string? fecha_prevista = null,
         [Description("Nueva fecha de publicación. " + DateHelp)] string? fecha_publicada = null,
-        [Description("URL http o https de la pieza publicada.")] string? url = null) => Run(() =>
+        [Description("URL http o https de la pieza publicada.")] string? url = null,
+        [Description("Hora de publicación, HH:mm (por ejemplo, 08:00 o 16:00).")] string? hora = null) => Run(() =>
     {
         PieceStatus? status = null;
         if (estado is not null)
@@ -115,9 +116,11 @@ public sealed class AliTools(ServerSettings settings, TimeProvider clock)
             PlannedDate = ParseDate(fecha_prevista, nameof(fecha_prevista)),
             PublishedDate = ParseDate(fecha_publicada, nameof(fecha_publicada)),
             Url = url?.Trim(),
+            Time = ParseTime(hora),
         };
 
-        var result = new PieceUpdater().Update(settings.ContentFolder, fichero, changes);
+        var config = changes.IsEmpty ? null : ContentLocation.LoadOptionalSeries(settings.SeriesFile, explicitlyGiven: false);
+        var result = new PieceUpdater().Update(settings.ContentFolder, fichero, changes, config);
         return JsonOutput.Serialize(UpdateDocument.Create(result));
     });
 
@@ -132,7 +135,8 @@ public sealed class AliTools(ServerSettings settings, TimeProvider clock)
         [Description("Asigna como fecha prevista la primera fecha libre de la serie.")] bool fecha_libre = false,
         [Description("Con fecha_libre, desde qué fecha buscar. Por defecto, hoy. " + DateHelp)] string? desde = null,
         [Description("Formato: articulo, post, carrusel...")] string? formato = null,
-        [Description("Piezas de las que depende (rutas relativas, con o sin .md).")] string[]? depende_de = null) => Run(() =>
+        [Description("Piezas de las que depende (rutas relativas, con o sin .md).")] string[]? depende_de = null,
+        [Description("Hora de publicación, HH:mm. Por defecto, la de la cadencia de la serie.")] string? hora = null) => Run(() =>
     {
         var request = new NewPiece
         {
@@ -143,6 +147,7 @@ public sealed class AliTools(ServerSettings settings, TimeProvider clock)
             SearchFrom = ParseDate(desde, nameof(desde)) ?? Today,
             Format = formato,
             DependsOn = depende_de ?? [],
+            Time = ParseTime(hora),
         };
 
         var created = new PieceCreator().Create(settings.ContentFolder, LoadSeries(), ReadCatalog().Pieces, request);
@@ -152,6 +157,9 @@ public sealed class AliTools(ServerSettings settings, TimeProvider clock)
     private Catalog ReadCatalog() => new CatalogReader().Read(settings.ContentFolder);
 
     private SeriesConfig LoadSeries() => new SeriesConfigLoader().Load(settings.SeriesFile);
+
+    private static TimeOnly? ParseTime(string? value) =>
+        TimeInput.TryParse(value, out var time) ? time : throw new McpException(TimeInput.InvalidMessage(value, "hora"));
 
     private DateOnly? ParseDate(string? value, string parameter) =>
         DateInput.TryParse(value, Today, out var date) ? date : throw new McpException(DateInput.InvalidMessage(value, parameter));
